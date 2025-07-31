@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/local/settings_service.dart';
 import '../../data/local/database_service.dart';
 import '../../business_logic/providers/theme_provider.dart';
@@ -8,6 +9,7 @@ import '../themes/romantic_themes.dart';
 import '../../services/ai/ai_service_factory.dart';
 import '../../services/ai/ai_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../widgets/theme_brightness_selector.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -18,11 +20,10 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
-  final TextEditingController _secretKeyController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   String _selectedAiProvider = 'ernie_bot';
   RomanticTheme _selectedRomanticTheme = RomanticTheme.sweetheartBliss;
-  Brightness _selectedBrightness = Brightness.light;
+  ThemeBrightnessMode _selectedBrightnessMode = ThemeBrightnessMode.system;
   String _selectedLanguage = 'zh_CN';
   bool _autoBackup = false;
   String _backupFrequency = 'weekly';
@@ -37,7 +38,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _apiKeyController.dispose();
-    _secretKeyController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -48,7 +48,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
 
     _apiKeyController.text = SettingsService.apiKey ?? '';
-    _secretKeyController.text = SettingsService.secretKey ?? '';
     _nameController.text = SettingsService.userName ?? '';
     _selectedAiProvider = SettingsService.aiProvider;
     _selectedLanguage = SettingsService.language;
@@ -60,7 +59,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     themeState.whenData((state) {
       setState(() {
         _selectedRomanticTheme = state.romanticTheme;
-        _selectedBrightness = state.brightness;
+        _selectedBrightnessMode = state.brightnessMode;
       });
     });
 
@@ -75,21 +74,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeState = ref.watch(themeNotifierProvider);
     themeState.whenData((state) {
       if (_selectedRomanticTheme != state.romanticTheme || 
-          _selectedBrightness != state.brightness) {
+          _selectedBrightnessMode != state.brightnessMode) {
         setState(() {
           _selectedRomanticTheme = state.romanticTheme;
-          _selectedBrightness = state.brightness;
+          _selectedBrightnessMode = state.brightnessMode;
+        });
+      }
+    });
+    
+    // 监听语言变化，实时更新UI
+    final localeState = ref.watch(localeNotifierProvider);
+    localeState.whenData((locale) {
+      final languageCode = locale.languageCode == 'zh' ? 'zh_CN' : 'en_US';
+      if (_selectedLanguage != languageCode) {
+        setState(() {
+          _selectedLanguage = languageCode;
         });
       }
     });
 
     final romanticTheme = ref.watch(currentRomanticThemeDataProvider);
+    final l10n = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '设置',
-          style: TextStyle(
+        title: Text(
+          l10n.settings,
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -98,7 +109,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             icon: const Icon(Icons.info_outline),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('设置会自动保存')),
+                SnackBar(content: Text(l10n.settingsAutoSave)),
               );
             },
           ),
@@ -108,17 +119,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                _buildProfileSection(),
-                _buildAiSection(),
-                _buildAppearanceSection(),
-                _buildDataSection(),
-                _buildAboutSection(),
+                _buildProfileSection(l10n),
+                _buildAiSection(l10n),
+                _buildAppearanceSection(l10n),
+                _buildDataSection(l10n),
+                _buildAboutSection(l10n),
               ],
             ),
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -127,7 +138,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '个人信息',
+              l10n.personalInfo,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -150,7 +161,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAiSection() {
+  Widget _buildAiSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -159,28 +170,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'AI服务配置',
+              l10n.aiServiceConfig,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.api),
-            title: const Text('AI提供商'),
+            leading: const Icon(Icons.psychology),
+            title: Text(l10n.aiProvider),
             subtitle: Text(_getAiProviderDisplayName(_selectedAiProvider)),
             trailing: DropdownButton<String>(
               value: _selectedAiProvider,
-              items: const [
-                DropdownMenuItem(
+              items: [
+                const DropdownMenuItem(
                   value: 'ernie_bot',
                   child: Text('文心一言'),
                 ),
-                DropdownMenuItem(
-                  value: 'openai',
-                  child: Text('OpenAI GPT'),
-                ),
-                DropdownMenuItem(
-                  value: 'claude',
-                  child: Text('Claude'),
+                const DropdownMenuItem(
+                  value: 'mock',
+                  child: Text('模拟AI服务（离线模式）'),
                 ),
               ],
               onChanged: (value) async {
@@ -195,11 +202,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.key),
-            title: const Text('API密钥'),
+            title: Text(l10n.apiKey),
             subtitle: TextField(
               controller: _apiKeyController,
-              decoration: const InputDecoration(
-                hintText: '请输入API密钥',
+              decoration: InputDecoration(
+                hintText: l10n.pleaseEnterApiKey,
                 border: InputBorder.none,
               ),
               obscureText: true,
@@ -213,31 +220,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.vpn_key),
-            title: const Text('Secret密钥'),
-            subtitle: TextField(
-              controller: _secretKeyController,
-              decoration: const InputDecoration(
-                hintText: '请输入Secret密钥',
-                border: InputBorder.none,
-              ),
-              obscureText: true,
-              onChanged: (value) async {
-                await SettingsService.setSecretKey(value);
-              },
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: _showSecretKeyHelp,
+            leading: const Icon(Icons.api),
+            title: Text(l10n.testConnection),
+            subtitle: Text(l10n.verifyApiKey),
+            trailing: ElevatedButton(
+              onPressed: _testApiConnection,
+              child: Text(l10n.test),
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.api),
-            title: const Text('测试连接'),
-            subtitle: const Text('验证API密钥是否有效'),
+            leading: const Icon(Icons.wifi_find),
+            title: Text(l10n.networkDiagnosis),
+            subtitle: Text(l10n.checkingNetworkConnection),
             trailing: ElevatedButton(
-              onPressed: _testApiConnection,
-              child: const Text('测试'),
+              onPressed: _diagnoseNetwork,
+              child: Text(l10n.runDiagnostics),
             ),
           ),
         ],
@@ -245,7 +242,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAppearanceSection() {
+  Widget _buildAppearanceSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -254,44 +251,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '外观设置',
+              l10n.appearanceSettings,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           ListTile(
             leading: const Icon(Icons.palette),
-            title: const Text('浪漫主题'),
+            title: Text(l10n.romanticTheme),
             subtitle: Text(_selectedRomanticTheme.displayName),
             trailing: ElevatedButton(
               onPressed: _showRomanticThemeDialog,
-              child: const Text('选择'),
+              child: Text(l10n.select),
             ),
           ),
-          SwitchListTile(
-            secondary: Icon(
-              _selectedBrightness == Brightness.dark ? Icons.dark_mode : Icons.light_mode,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: const Text('深色模式'),
-            subtitle: Text(_selectedBrightness == Brightness.dark ? '深色主题已启用' : '浅色主题已启用'),
-            value: _selectedBrightness == Brightness.dark,
-            onChanged: (value) async {
-              final newBrightness = value ? Brightness.dark : Brightness.light;
-              setState(() {
-                _selectedBrightness = newBrightness;
-              });
-              await ref.read(themeNotifierProvider.notifier).setBrightness(newBrightness);
-            },
-          ),
+          // Theme brightness selector
+          const ThemeBrightnessSelector(),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('语言'),
+            title: Text(l10n.language),
             subtitle: Text(_getLanguageDisplayName(_selectedLanguage)),
             trailing: DropdownButton<String>(
               value: _selectedLanguage,
-              items: const [
-                DropdownMenuItem(value: 'zh_CN', child: Text('中文')),
-                DropdownMenuItem(value: 'en_US', child: Text('English')),
+              items: [
+                DropdownMenuItem(value: 'zh_CN', child: Text(l10n.chinese)),
+                DropdownMenuItem(value: 'en_US', child: Text(l10n.english)),
               ],
               onChanged: (value) async {
                 if (value != null) {
@@ -309,7 +292,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildDataSection() {
+  Widget _buildDataSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -318,14 +301,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '数据管理',
+              l10n.dataManagement,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.backup),
-            title: const Text('自动备份'),
-            subtitle: const Text('定期备份数据到本地'),
+            title: Text(l10n.autoBackup),
+            subtitle: Text(l10n.regularBackup),
             value: _autoBackup,
             onChanged: (value) async {
               setState(() {
@@ -337,14 +320,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (_autoBackup)
             ListTile(
               leading: const Icon(Icons.schedule),
-              title: const Text('备份频率'),
+              title: Text(l10n.backupFrequency),
               subtitle: Text(_getBackupFrequencyDisplayName(_backupFrequency)),
               trailing: DropdownButton<String>(
                 value: _backupFrequency,
-                items: const [
-                  DropdownMenuItem(value: 'daily', child: Text('每天')),
-                  DropdownMenuItem(value: 'weekly', child: Text('每周')),
-                  DropdownMenuItem(value: 'monthly', child: Text('每月')),
+                items: [
+                  DropdownMenuItem(value: 'daily', child: Text(l10n.daily)),
+                  DropdownMenuItem(value: 'weekly', child: Text(l10n.weekly)),
+                  DropdownMenuItem(value: 'monthly', child: Text(l10n.monthly)),
                 ],
                 onChanged: (value) async {
                   if (value != null) {
@@ -358,33 +341,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ListTile(
             leading: const Icon(Icons.download),
-            title: const Text('导出数据'),
-            subtitle: const Text('导出所有记录和设置'),
+            title: Text(l10n.exportData),
+            subtitle: Text(l10n.exportAllRecords),
             trailing: ElevatedButton(
               onPressed: _exportData,
-              child: const Text('导出'),
+              child: Text(l10n.export),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.upload),
-            title: const Text('导入数据'),
-            subtitle: const Text('从备份文件恢复数据'),
+            title: Text(l10n.importData),
+            subtitle: Text(l10n.restoreFromBackup),
             trailing: ElevatedButton(
               onPressed: _importData,
-              child: const Text('导入'),
+              child: Text(l10n.import),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.delete_forever),
-            title: const Text('清除所有数据'),
-            subtitle: const Text('删除所有记录和设置'),
+            title: Text(l10n.clearAllData),
+            subtitle: Text(l10n.deleteAllRecords),
             trailing: ElevatedButton(
               onPressed: _clearAllData,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Theme.of(context).colorScheme.onError,
               ),
-              child: const Text('清除'),
+              child: Text(l10n.clear),
             ),
           ),
         ],
@@ -392,7 +375,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAboutSection() {
+  Widget _buildAboutSection(AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
       child: Column(
@@ -401,30 +384,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              '关于应用',
+              l10n.aboutApp,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           ListTile(
             leading: const Icon(Icons.info),
-            title: const Text('版本'),
+            title: Text(l10n.version),
             subtitle: const Text('1.0.0'),
           ),
           ListTile(
             leading: const Icon(Icons.description),
-            title: const Text('隐私政策'),
+            title: Text(l10n.privacyPolicy),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: _showPrivacyPolicy,
           ),
           ListTile(
             leading: const Icon(Icons.description),
-            title: const Text('用户协议'),
+            title: Text(l10n.userAgreement),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: _showUserAgreement,
           ),
           ListTile(
             leading: const Icon(Icons.feedback),
-            title: const Text('反馈建议'),
+            title: Text(l10n.feedback),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: _showFeedback,
           ),
@@ -434,35 +417,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _getAiProviderDisplayName(String provider) {
+    final l10n = AppLocalizations.of(context);
     switch (provider) {
       case 'ernie_bot':
-        return '文心一言';
+        return '文心一言'; // Keep brand name as is
       case 'openai':
-        return 'OpenAI GPT';
+        return 'OpenAI GPT'; // Keep brand name as is
       case 'claude':
-        return 'Claude';
+        return 'Claude'; // Keep brand name as is
+      case 'mock':
+        return l10n.mockAiServiceNotice;
       default:
         return '文心一言';
     }
   }
 
-  String _getBrightnessDisplayName(Brightness brightness) {
-    switch (brightness) {
-      case Brightness.light:
-        return '浅色';
-      case Brightness.dark:
-        return '深色';
-    }
-  }
+
 
   String _getLanguageDisplayName(String language) {
+    final l10n = AppLocalizations.of(context);
     switch (language) {
       case 'zh_CN':
-        return '中文';
+        return l10n.chinese;
       case 'en_US':
-        return 'English';
+        return l10n.english;
       default:
-        return '中文';
+        return l10n.chinese;
     }
   }
 
@@ -483,97 +463,121 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('语言已切换 / Language switched'),
+        content: Text('语言已切换 / Language switched'), // Keep bilingual for language switching
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
   void _showApiKeyHelp() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('如何获取API密钥'),
-        content: const SingleChildScrollView(
+        title: Text(l10n.configureApiKey),
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('文心一言 (推荐):'),
-              Text('1. 访问 https://console.bce.baidu.com/'),
+              Text(l10n.configureApiKeyDescription),
+              const SizedBox(height: 12),
+              const Text('1. 访问 百度智能云 Qianfan 平台'), // Keep specific instructions
+              const Text('   https://console.bce.baidu.com/qianfan/'),
+              const SizedBox(height: 8),
+              const Text('2. 注册并登录百度账号'),
+              const SizedBox(height: 8),
+              const Text('3. 开通文心一言服务'),
+              const SizedBox(height: 8),
+              const Text('4. 在应用管理中创建应用'),
+              const SizedBox(height: 8),
+              const Text('5. 获取 Client ID 和 Client Secret'),
+              SizedBox(height: 8),
+              Text('6. 将 Client ID 填入API密钥框'),
+              SizedBox(height: 12),
+              Text('注意事项：'),
+              Text('• 需要实名认证后才能使用'),
+              Text('• 新用户可获得免费额度'),
+              Text('• 使用量超出后按量计费'),
+              SizedBox(height: 12),
+              Text('故障排查：'),
+              Text('• 检查网络连接是否正常'),
+              Text('• 确认API密钥是否正确'),
+              Text('• 确认服务是否已开通'),
               Text('2. 注册并登录百度智能云账号'),
               Text('3. 开通文心一言服务'),
               Text('4. 在控制台获取API Key'),
+              Text('5. 将API Key粘贴到设置中'),
               SizedBox(height: 16),
-              Text('OpenAI GPT:'),
-              Text('1. 访问 https://platform.openai.com/'),
-              Text('2. 注册并登录OpenAI账号'),
-              Text('3. 在API Keys页面创建新的密钥'),
-              SizedBox(height: 16),
-              Text('Claude:'),
-              Text('1. 访问 https://console.anthropic.com/'),
-              Text('2. 注册并登录Anthropic账号'),
-              Text('3. 在API Keys页面创建新的密钥'),
+              Text('注意事项：'),
+              Text('• 确保网络连接正常'),
+              Text('• API Key需要妥善保管'),
+              Text('• 如遇连接问题，请检查网络设置'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('知道了'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
     );
   }
 
-  void _showSecretKeyHelp() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Secret密钥说明'),
-        content: const Text(
-          'Secret密钥用于API身份验证：\n\n'
-          '• 文心一言：需要同时配置API Key和Secret Key\n'
-          '• 其他服务：通常只需要API Key\n\n'
-          '请确保API Key和Secret Key的安全性，不要泄露给他人。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Future<void> _testApiConnection() async {
+    final l10n = AppLocalizations.of(context);
     final apiKey = _apiKeyController.text.trim();
-    final secretKey = _secretKeyController.text.trim();
     
-    if (apiKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请先输入API密钥'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedAiProvider == 'ernie_bot' && secretKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('文心一言需要同时输入API密钥和Secret密钥'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+    if (_selectedAiProvider == 'ernie_bot') {
+      if (apiKey.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.pleaseEnterApiKeyFirst),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
     }
 
     try {
-      final aiService = AiServiceFactory.createService(_selectedAiProvider);
+      final aiService = AiServiceFactory.createService(
+        _selectedAiProvider,
+        apiKey: apiKey,
+      );
+      
+      if (_selectedAiProvider == 'mock') {
+        // 模拟服务不需要网络测试
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('正在测试模拟AI服务...'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      } else {
+        // 先测试网络连接
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('正在测试网络连接...'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+        
+        await aiService.testConnection();
+        
+        // 网络连接成功，测试API功能
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('网络连接正常，正在测试API功能...'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+      
       final result = await aiService.generateText('你好，请简单回复一句话。');
       
       if (mounted) {
@@ -604,7 +608,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('确定'),
+                child: Text(l10n.ok),
               ),
             ],
           ),
@@ -616,41 +620,123 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           SnackBar(
             content: Text('API测试失败: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     }
   }
 
+  Future<void> _diagnoseNetwork() async {
+    final l10n = AppLocalizations.of(context);
+    final connectivityResult = await Connectivity().checkConnectivity();
+    String message = '';
+    String status = '';
+
+    switch (connectivityResult) {
+      case ConnectivityResult.mobile:
+        message = '当前网络为移动网络，请注意流量消耗。';
+        status = '移动网络';
+        break;
+      case ConnectivityResult.wifi:
+        message = '当前网络为Wi-Fi，连接稳定。';
+        status = 'Wi-Fi';
+        break;
+      case ConnectivityResult.ethernet:
+        message = '当前网络为有线网络，连接稳定。';
+        status = '有线网络';
+        break;
+      case ConnectivityResult.none:
+        message = '当前网络不可用，请检查网络设置。';
+        status = '无网络';
+        break;
+      default:
+        message = '无法确定网络状态。';
+        status = '未知';
+        break;
+    }
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('网络诊断'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('当前网络状态: $status'),
+              const SizedBox(height: 8),
+              Text(message),
+              const SizedBox(height: 16),
+              const Text('如果无法连接百度API，建议：'),
+              const SizedBox(height: 8),
+              const Text('1. 使用模拟AI服务进行测试'),
+              const Text('2. 检查防火墙设置'),
+              const Text('3. 尝试使用VPN'),
+              const Text('4. 联系网络管理员'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.ok),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 自动切换到模拟AI服务
+                setState(() {
+                  _selectedAiProvider = 'mock';
+                });
+                SettingsService.setAiProvider('mock');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('已切换到模拟AI服务'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: const Text('切换到模拟服务'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   Future<void> _exportData() async {
+    final l10n = AppLocalizations.of(context);
     // TODO: 实现数据导出
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('数据导出功能即将推出')),
+      SnackBar(content: Text(l10n.featureComingSoon)),
     );
   }
 
   Future<void> _importData() async {
+    final l10n = AppLocalizations.of(context);
     // TODO: 实现数据导入
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('数据导入功能即将推出')),
+      SnackBar(content: Text(l10n.featureComingSoon)),
     );
   }
 
   Future<void> _clearAllData() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认清除'),
-        content: const Text('此操作将删除所有记录和设置，无法撤销。确定要继续吗？'),
+        title: Text(l10n.confirmClearAllData),
+        content: Text(l10n.clearAllDataWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('清除'),
+            child: Text(l10n.clear),
           ),
         ],
       ),
@@ -678,28 +764,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showPrivacyPolicy() {
+    final l10n = AppLocalizations.of(context);
     // TODO: 显示隐私政策
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('隐私政策页面即将推出')),
+      SnackBar(content: Text(l10n.featureComingSoon)),
     );
   }
 
   void _showUserAgreement() {
+    final l10n = AppLocalizations.of(context);
     // TODO: 显示用户协议
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('用户协议页面即将推出')),
+      SnackBar(content: Text(l10n.featureComingSoon)),
     );
   }
 
   void _showFeedback() {
+    final l10n = AppLocalizations.of(context);
     // TODO: 显示反馈页面
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('反馈页面即将推出')),
+      SnackBar(content: Text(l10n.featureComingSoon)),
     );
   }
 
   /// 显示浪漫主题选择对话框
   void _showRomanticThemeDialog() {
+    final l10n = AppLocalizations.of(context);
     final currentTheme = Theme.of(context);
     
     showDialog(
@@ -713,7 +803,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '选择浪漫主题',
+                l10n.chooseTheme,
                 style: currentTheme.textTheme.headlineSmall?.copyWith(
                   color: currentTheme.colorScheme.onSurface,
                 ),
@@ -731,7 +821,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   itemCount: RomanticTheme.values.length,
                   itemBuilder: (context, index) {
                     final theme = RomanticTheme.values[index];
-                    final themeData = RomanticThemes.getTheme(theme);
+                    final themeData = RomanticThemes.getLocalizedTheme(theme, l10n);
                     final isSelected = theme == _selectedRomanticTheme;
                     
                     return GestureDetector(

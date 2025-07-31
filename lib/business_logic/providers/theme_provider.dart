@@ -5,10 +5,17 @@ import '../../presentation/themes/romantic_themes.dart';
 
 part 'theme_provider.g.dart';
 
+/// Enum for theme brightness mode
+enum ThemeBrightnessMode {
+  light,
+  dark,
+  system,
+}
+
 @riverpod
 class ThemeNotifier extends _$ThemeNotifier {
   static const String _themeKey = 'selected_romantic_theme';
-  static const String _brightnessKey = 'theme_brightness';
+  static const String _brightnessKey = 'theme_brightness_mode';
   
   @override
   Future<ThemeState> build() async {
@@ -18,13 +25,13 @@ class ThemeNotifier extends _$ThemeNotifier {
     final themeIndex = prefs.getInt(_themeKey) ?? 0;
     final romanticTheme = RomanticTheme.values[themeIndex.clamp(0, RomanticTheme.values.length - 1)];
     
-    // Load saved brightness
-    final brightnessIndex = prefs.getInt(_brightnessKey) ?? 0;
-    final brightness = Brightness.values[brightnessIndex];
+    // Load saved brightness mode
+    final brightnessModeIndex = prefs.getInt(_brightnessKey) ?? 2; // Default to system
+    final brightnessMode = ThemeBrightnessMode.values[brightnessModeIndex.clamp(0, ThemeBrightnessMode.values.length - 1)];
     
     return ThemeState(
       romanticTheme: romanticTheme,
-      brightness: brightness,
+      brightnessMode: brightnessMode,
     );
   }
   
@@ -38,27 +45,13 @@ class ThemeNotifier extends _$ThemeNotifier {
     state = AsyncValue.data(newState);
   }
   
-  /// Toggle between light and dark mode
-  Future<void> toggleBrightness() async {
-    final currentState = await future;
-    final newBrightness = currentState.brightness == Brightness.light 
-        ? Brightness.dark 
-        : Brightness.light;
-    
+  /// Set brightness mode
+  Future<void> setBrightnessMode(ThemeBrightnessMode brightnessMode) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_brightnessKey, newBrightness.index);
-    
-    final newState = currentState.copyWith(brightness: newBrightness);
-    state = AsyncValue.data(newState);
-  }
-  
-  /// Set specific brightness
-  Future<void> setBrightness(Brightness brightness) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_brightnessKey, brightness.index);
+    await prefs.setInt(_brightnessKey, brightnessMode.index);
     
     final currentState = await future;
-    final newState = currentState.copyWith(brightness: brightness);
+    final newState = currentState.copyWith(brightnessMode: brightnessMode);
     state = AsyncValue.data(newState);
   }
   
@@ -67,7 +60,8 @@ class ThemeNotifier extends _$ThemeNotifier {
     return state.when(
       data: (themeState) {
         final romanticThemeData = RomanticThemes.getTheme(themeState.romanticTheme);
-        return romanticThemeData.toThemeData(brightness: themeState.brightness);
+        final effectiveBrightness = _getEffectiveBrightness(themeState.brightnessMode);
+        return romanticThemeData.toThemeData(brightness: effectiveBrightness);
       },
       loading: () => _getDefaultThemeData(),
       error: (_, __) => _getDefaultThemeData(),
@@ -83,6 +77,20 @@ class ThemeNotifier extends _$ThemeNotifier {
     );
   }
   
+  /// Get effective brightness based on mode and system preference
+  Brightness _getEffectiveBrightness(ThemeBrightnessMode mode) {
+    switch (mode) {
+      case ThemeBrightnessMode.light:
+        return Brightness.light;
+      case ThemeBrightnessMode.dark:
+        return Brightness.dark;
+      case ThemeBrightnessMode.system:
+        // Get system brightness from MediaQuery
+        final window = WidgetsBinding.instance.window;
+        return window.platformBrightness;
+    }
+  }
+  
   ThemeData _getDefaultThemeData() {
     final defaultTheme = RomanticThemes.getTheme(RomanticTheme.sweetheartBliss);
     return defaultTheme.toThemeData();
@@ -92,20 +100,20 @@ class ThemeNotifier extends _$ThemeNotifier {
 /// Theme state data class
 class ThemeState {
   final RomanticTheme romanticTheme;
-  final Brightness brightness;
+  final ThemeBrightnessMode brightnessMode;
   
   const ThemeState({
     required this.romanticTheme,
-    required this.brightness,
+    required this.brightnessMode,
   });
   
   ThemeState copyWith({
     RomanticTheme? romanticTheme,
-    Brightness? brightness,
+    ThemeBrightnessMode? brightnessMode,
   }) {
     return ThemeState(
       romanticTheme: romanticTheme ?? this.romanticTheme,
-      brightness: brightness ?? this.brightness,
+      brightnessMode: brightnessMode ?? this.brightnessMode,
     );
   }
   
@@ -115,14 +123,14 @@ class ThemeState {
       other is ThemeState &&
           runtimeType == other.runtimeType &&
           romanticTheme == other.romanticTheme &&
-          brightness == other.brightness;
+          brightnessMode == other.brightnessMode;
   
   @override
-  int get hashCode => romanticTheme.hashCode ^ brightness.hashCode;
+  int get hashCode => romanticTheme.hashCode ^ brightnessMode.hashCode;
   
   @override
   String toString() {
-    return 'ThemeState{romanticTheme: $romanticTheme, brightness: $brightness}';
+    return 'ThemeState{romanticTheme: $romanticTheme, brightnessMode: $brightnessMode}';
   }
 }
 
@@ -131,17 +139,17 @@ extension RomanticThemeExtension on RomanticTheme {
   String get displayName {
     switch (this) {
       case RomanticTheme.sweetheartBliss:
-        return '甜心幸福';
+        return 'Sweetheart Bliss';
       case RomanticTheme.romanticDreams:
-        return '浪漫梦境';
+        return 'Romantic Dreams';
       case RomanticTheme.heartfeltHarmony:
-        return '温馨和谐';
+        return 'Heartfelt Harmony';
       case RomanticTheme.vintageRose:
-        return '复古玫瑰';
+        return 'Vintage Rose';
       case RomanticTheme.modernLove:
-        return '现代之爱';
+        return 'Modern Love';
       case RomanticTheme.twilightPassion:
-        return '黄昏激情';
+        return 'Twilight Passion';
     }
   }
   
@@ -154,6 +162,42 @@ extension RomanticThemeExtension on RomanticTheme {
   }
 }
 
+/// Extension for brightness mode display
+extension ThemeBrightnessModeExtension on ThemeBrightnessMode {
+  String get displayName {
+    switch (this) {
+      case ThemeBrightnessMode.light:
+        return 'Light';
+      case ThemeBrightnessMode.dark:
+        return 'Dark';
+      case ThemeBrightnessMode.system:
+        return 'System';
+    }
+  }
+  
+  IconData get icon {
+    switch (this) {
+      case ThemeBrightnessMode.light:
+        return Icons.light_mode;
+      case ThemeBrightnessMode.dark:
+        return Icons.dark_mode;
+      case ThemeBrightnessMode.system:
+        return Icons.brightness_auto;
+    }
+  }
+  
+  String get description {
+    switch (this) {
+      case ThemeBrightnessMode.light:
+        return 'Always use light theme';
+      case ThemeBrightnessMode.dark:
+        return 'Always use dark theme';
+      case ThemeBrightnessMode.system:
+        return 'Follow system setting';
+    }
+  }
+}
+
 /// Provider for easy access to current theme data
 @riverpod
 ThemeData currentThemeData(CurrentThemeDataRef ref) {
@@ -161,7 +205,8 @@ ThemeData currentThemeData(CurrentThemeDataRef ref) {
   return themeState.when(
     data: (state) {
       final romanticThemeData = RomanticThemes.getTheme(state.romanticTheme);
-      return romanticThemeData.toThemeData(brightness: state.brightness);
+      final effectiveBrightness = _getEffectiveBrightness(state.brightnessMode);
+      return romanticThemeData.toThemeData(brightness: effectiveBrightness);
     },
     loading: () => _getDefaultThemeData(),
     error: (_, __) => _getDefaultThemeData(),
@@ -177,6 +222,19 @@ RomanticThemeData currentRomanticThemeData(CurrentRomanticThemeDataRef ref) {
     loading: () => RomanticThemes.getTheme(RomanticTheme.sweetheartBliss),
     error: (_, __) => RomanticThemes.getTheme(RomanticTheme.sweetheartBliss),
   );
+}
+
+/// Helper function to get effective brightness
+Brightness _getEffectiveBrightness(ThemeBrightnessMode mode) {
+  switch (mode) {
+    case ThemeBrightnessMode.light:
+      return Brightness.light;
+    case ThemeBrightnessMode.dark:
+      return Brightness.dark;
+    case ThemeBrightnessMode.system:
+      final window = WidgetsBinding.instance.window;
+      return window.platformBrightness;
+  }
 }
 
 ThemeData _getDefaultThemeData() {

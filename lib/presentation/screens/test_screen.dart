@@ -44,7 +44,7 @@ class TestScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('浪漫主题: ${state.romanticTheme.displayName}'),
-                          Text('亮度模式: ${state.brightness == Brightness.light ? "浅色" : "深色"}'),
+                          Text('亮度模式: ${state.brightnessMode.displayName}'),
                           Text('主题颜色: ${RomanticThemes.getTheme(state.romanticTheme).name}'),
                         ],
                       ),
@@ -107,7 +107,13 @@ class TestScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        ref.read(themeNotifierProvider.notifier).toggleBrightness();
+                        final themeState = ref.read(themeNotifierProvider).valueOrNull;
+                        if (themeState != null) {
+                          final newMode = themeState.brightnessMode == ThemeBrightnessMode.dark 
+                              ? ThemeBrightnessMode.light 
+                              : ThemeBrightnessMode.dark;
+                          ref.read(themeNotifierProvider.notifier).setBrightnessMode(newMode);
+                        }
                       },
                       child: const Text('切换深色/浅色模式'),
                     ),

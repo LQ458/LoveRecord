@@ -1,189 +1,189 @@
-# LoveRecord - AI驱动的智能个人记录应用
+# LoveRecord - AI-Powered Smart Personal Record App
 
-LoveRecord是一个基于Flutter开发的跨平台个人记录应用，集成Notion API和国内AI大模型，为用户提供智能化的内容管理、分类和分析服务。
+LoveRecord is a cross-platform personal record application developed with Flutter, integrating Notion API and domestic AI large models to provide users with intelligent content management, classification, and analysis services.
 
-## 功能特性
+## Features
 
-### 🎯 核心功能
-- **多媒体记录**：支持文字、图片、音频、视频、文档等多种媒体类型
-- **智能分类**：AI自动分析内容并分类（工作、学习、旅行、健康等）
-- **情感分析**：AI分析记录的情感倾向，帮助用户了解自己的情绪变化
-- **智能摘要**：自动生成内容摘要和标题建议
-- **AI聊天助手**：与AI对话，获得内容回顾和情感支持
+### 🎯 Core Features
+- **Multimedia Records**: Support for text, images, audio, video, documents, and other media types
+- **Smart Classification**: AI automatically analyzes content and categorizes it (work, study, travel, health, etc.)
+- **Emotion Analysis**: AI analyzes the emotional tendency of records to help users understand their emotional changes
+- **Smart Summaries**: Automatically generates content summaries and title suggestions
+- **AI Chat Assistant**: Chat with AI for content review and emotional support
 
-### 🔗 外部集成
-- **Notion同步**：双向同步Notion数据库和页面
-- **Markdown导入**：批量导入Markdown文件和文件夹
-- **多种AI服务**：支持百度文心一言、阿里通义千问、腾讯混元等
+### 🔗 External Integrations
+- **Notion Sync**: Bidirectional synchronization with Notion databases and pages
+- **Markdown Import**: Batch import Markdown files and folders
+- **Multiple AI Services**: Support for Baidu Ernie Bot, Alibaba Tongyi Qianwen, Tencent Hunyuan, and more
 
-### 🎨 个性化体验
-- **主题系统**：多种预设主题 + 完全自定义
-- **深色/浅色模式**：自动跟随系统主题
-- **背景音乐**：内置音乐库，支持自定义音乐
-- **跨平台同步**：iOS、Android、桌面端数据同步
+### 🎨 Personalized Experience
+- **Theme System**: Multiple preset themes + fully customizable
+- **Dark/Light Mode**: Automatically follows system theme
+- **Background Music**: Built-in music library with custom music support
+- **Cross-platform Sync**: Data synchronization across iOS, Android, and desktop
 
-### 🔒 隐私安全
-- **完全本地存储**：用户数据完全可控
-- **加密保护**：AES-256加密存储敏感数据
-- **离线使用**：所有核心功能支持离线使用
+### 🔒 Privacy & Security
+- **Complete Local Storage**: User data is fully controllable
+- **Encryption Protection**: AES-256 encrypted storage for sensitive data
+- **Offline Usage**: All core features support offline use
 
-## 技术架构
+## Technical Architecture
 
-### 前端技术栈
-- **Flutter 3.16+**：跨平台开发框架
-- **Riverpod 2.4+**：响应式状态管理
-- **Go Router**：声明式路由管理
+### Frontend Tech Stack
+- **Flutter 3.16+**: Cross-platform development framework
+- **Riverpod 2.4+**: Reactive state management
+- **Go Router**: Declarative routing management
 
-### 数据存储
-- **SQLite**：结构化数据存储（记录、标签、分类）
-- **Hive**：非结构化数据存储（媒体文件、缓存）
-- **AES-256**：数据加密保护
+### Data Storage
+- **SQLite**: Structured data storage (records, tags, categories)
+- **Hive**: Unstructured data storage (media files, cache)
+- **AES-256**: Data encryption protection
 
-### AI服务集成
-- **百度文心一言**：中文理解强，知识丰富
-- **阿里通义千问**：多模态能力强
-- **腾讯混元**：对话能力强
-- **智谱AI**：开源友好，成本低
-- **讯飞星火**：语音交互强
+### AI Service Integration
+- **Baidu Ernie Bot**: Strong Chinese understanding, rich knowledge
+- **Alibaba Tongyi Qianwen**: Strong multimodal capabilities
+- **Tencent Hunyuan**: Strong conversational abilities
+- **Zhipu AI**: Open source friendly, low cost
+- **iFlytek Spark**: Strong voice interaction
 
-## 项目结构
+## Project Structure
 
 ```
 lib/
-├── main.dart                 # 应用入口
-├── core/                     # 核心工具和常量
-│   ├── constants/           # 常量定义
-│   ├── utils/              # 工具函数
-│   └── extensions/         # 扩展方法
-├── data/                    # 数据层
-│   ├── models/             # 数据模型
-│   ├── repositories/       # 数据访问
-│   ├── local/             # 本地存储
-│   └── remote/            # 远程API
-├── presentation/           # 表现层
-│   ├── screens/           # 页面
-│   ├── widgets/           # 组件
-│   └── themes/            # 主题
-├── business_logic/         # 业务逻辑
-│   ├── providers/         # Riverpod提供者
-│   └── state/             # 状态管理
-└── services/              # 外部服务
-    ├── ai/                # AI服务集成
+├── main.dart                 # Application entry point
+├── core/                     # Core utilities and constants
+│   ├── constants/           # Constant definitions
+│   ├── utils/              # Utility functions
+│   └── extensions/         # Extension methods
+├── data/                    # Data layer
+│   ├── models/             # Data models
+│   ├── repositories/       # Data access
+│   ├── local/             # Local storage
+│   └── remote/            # Remote APIs
+├── presentation/           # Presentation layer
+│   ├── screens/           # Pages
+│   ├── widgets/           # Components
+│   └── themes/            # Themes
+├── business_logic/         # Business logic
+│   ├── providers/         # Riverpod providers
+│   └── state/             # State management
+└── services/              # External services
+    ├── ai/                # AI service integration
     ├── notion/            # Notion API
-    ├── sync/              # 同步服务
-    └── media/             # 媒体处理
+    ├── sync/              # Sync services
+    └── media/             # Media processing
 ```
 
-## 开发环境
+## Development Environment
 
-### 系统要求
+### System Requirements
 - Flutter 3.16+
 - Dart 3.8+
 - Android Studio / VS Code
 - iOS Simulator / Android Emulator
 
-### 安装依赖
+### Install Dependencies
 ```bash
-# 克隆项目
+# Clone the project
 git clone https://github.com/your-username/loverecord.git
 cd loverecord
 
-# 安装依赖
+# Install dependencies
 flutter pub get
 
-# 生成代码
+# Generate code
 flutter packages pub run build_runner build
 
-# 运行应用
+# Run the app
 flutter run
 ```
 
-### 开发命令
+### Development Commands
 ```bash
-# 代码分析
+# Code analysis
 flutter analyze
 
-# 格式化代码
+# Format code
 dart format .
 
-# 运行测试
+# Run tests
 flutter test
 
-# 构建应用
+# Build app
 flutter build apk --release
 flutter build ios --release
 ```
 
-## 配置说明
+## Configuration
 
-### AI服务配置
-在应用设置中配置AI服务API密钥：
+### AI Service Configuration
+Configure AI service API keys in the app settings:
 
-1. **百度文心一言**
-   - API Key: 从百度智能云获取
-   - Secret Key: 从百度智能云获取
+1. **Baidu Ernie Bot**
+   - API Key: Get from Baidu Cloud
+   - Client Secret: Get from Baidu Cloud
 
-2. **阿里通义千问**
-   - API Key: 从阿里云获取
+2. **Alibaba Tongyi Qianwen**
+   - API Key: Get from Alibaba Cloud
 
-3. **腾讯混元**
-   - API Key: 从腾讯云获取
+3. **Tencent Hunyuan**
+   - API Key: Get from Tencent Cloud
 
-### Notion集成配置
-1. 在Notion中创建Integration
-2. 获取API Token
-3. 在应用中配置Token和Database ID
+### Notion Integration Configuration
+1. Create an Integration in Notion
+2. Get the API Token
+3. Configure Token and Database ID in the app
 
-## 开发计划
+## Development Roadmap
 
-### 第一阶段：基础功能（已完成）
-- ✅ 项目架构搭建
-- ✅ 数据模型设计
-- ✅ 本地存储实现
-- ✅ 基础UI框架
-- ✅ 主题系统
+### Phase 1: Basic Features (Completed)
+- ✅ Project architecture setup
+- ✅ Data model design
+- ✅ Local storage implementation
+- ✅ Basic UI framework
+- ✅ Theme system
 
-### 第二阶段：AI集成（进行中）
-- 🔄 AI服务抽象层
-- 🔄 百度文心一言集成
-- ⏳ 其他AI服务集成
-- ⏳ 智能分类功能
+### Phase 2: AI Integration (In Progress)
+- 🔄 AI service abstraction layer
+- 🔄 Baidu Ernie Bot integration
+- ⏳ Other AI service integrations
+- ⏳ Smart classification features
 
-### 第三阶段：外部集成（计划中）
-- ⏳ Notion API集成
-- ⏳ Markdown导入功能
-- ⏳ 同步功能
+### Phase 3: External Integration (Planned)
+- ⏳ Notion API integration
+- ⏳ Markdown import functionality
+- ⏳ Sync features
 
-### 第四阶段：高级功能（计划中）
-- ⏳ 个性化设置
-- ⏳ 音乐背景
-- ⏳ 性能优化
+### Phase 4: Advanced Features (Planned)
+- ⏳ Personalization settings
+- ⏳ Background music
+- ⏳ Performance optimization
 
-## 贡献指南
+## Contributing
 
-欢迎贡献代码！请遵循以下步骤：
+Welcome to contribute code! Please follow these steps:
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 许可证
+## License
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 联系方式
+## Contact
 
-- 项目主页：https://github.com/your-username/loverecord
-- 问题反馈：https://github.com/your-username/loverecord/issues
-- 邮箱：your-email@example.com
+- Project homepage: https://github.com/your-username/loverecord
+- Issue feedback: https://github.com/your-username/loverecord/issues
+- Email: your-email@example.com
 
-## 致谢
+## Acknowledgments
 
-感谢以下开源项目的支持：
+Thanks to the following open source projects:
 - [Flutter](https://flutter.dev/)
 - [Riverpod](https://riverpod.dev/)
-- [百度文心一言](https://cloud.baidu.com/product/wenxinworkshop)
-- [阿里通义千问](https://dashscope.aliyun.com/)
+- [Baidu Ernie Bot](https://cloud.baidu.com/product/wenxinworkshop)
+- [Alibaba Tongyi Qianwen](https://dashscope.aliyun.com/)
 - [Notion API](https://developers.notion.com/)

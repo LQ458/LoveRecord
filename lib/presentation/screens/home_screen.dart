@@ -7,6 +7,7 @@ import '../../data/models/record.dart';
 import '../widgets/record_presentation_blocks.dart';
 import '../widgets/loading_widget.dart';
 import '../themes/romantic_themes.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -55,6 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final recordsAsync = ref.watch(recordsNotifierProvider);
     final romanticTheme = ref.watch(currentRomanticThemeDataProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -77,17 +79,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             icon: Icon(_presentationStyle.icon),
             onPressed: _showPresentationStyleDialog,
-            tooltip: '切换显示样式',
+            tooltip: l10n.switchDisplayStyle,
           ),
           IconButton(
             icon: const Icon(Icons.palette),
             onPressed: _showThemeSelectionDialog,
-            tooltip: '选择主题',
+            tooltip: l10n.selectTheme,
           ),
           IconButton(
             icon: Icon(_getBrightnessIcon()),
             onPressed: _toggleBrightness,
-            tooltip: '切换深色/浅色模式',
+            tooltip: l10n.brightnessMode,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -98,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: () {
               Navigator.of(context).pushNamed('/analytics');
             },
-            tooltip: '情感分析',
+            tooltip: l10n.emotionalAnalysis,
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -128,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: TextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: '搜索记录...',
+                              hintText: l10n.searchRecords,
                               prefixIcon: Icon(
                                 Icons.search, 
                                 color: Theme.of(context).brightness == Brightness.dark 
@@ -260,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _presentationStyle.displayName,
+                                _presentationStyle.getDisplayName(context),
                                 style: TextStyle(
                                   color: Theme.of(context).brightness == Brightness.dark 
                                       ? const Color(0xFFE0E0E0) 
@@ -436,22 +438,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 获取类型显示名称
   String _getTypeDisplayName(RecordType type) {
-    switch (type) {
-      case RecordType.diary:
-        return '日记';
-      case RecordType.work:
-        return '工作';
-      case RecordType.study:
-        return '学习';
-      case RecordType.travel:
-        return '旅行';
-      case RecordType.health:
-        return '健康';
-      case RecordType.finance:
-        return '财务';
-      case RecordType.creative:
-        return '创意';
-    }
+    final l10n = AppLocalizations.of(context);
+    return l10n.getRecordTypeDisplayName(type.name);
   }
 
   /// 创建新记录
@@ -466,26 +454,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 删除记录
   void _deleteRecord(Record record) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除记录"${record.title}"吗？此操作无法撤销。'),
+        title: Text(l10n.confirmDelete),
+        content: Text(l10n.confirmDeleteRecord.replaceAll('{title}', record.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               ref.read(recordsNotifierProvider.notifier).deleteRecord(record.id);
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('记录已删除')),
+                SnackBar(content: Text(l10n.recordDeleted)),
               );
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -495,56 +484,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 显示展示样式选择对话框
   void _showPresentationStyleDialog() {
     final romanticTheme = ref.read(currentRomanticThemeDataProvider);
+    final l10n = AppLocalizations.of(context);
     
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark 
+            ? const Color(0xFF2D2D2D) 
+            : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          decoration: romanticTheme.createGradientDecoration(borderRadius: 20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '选择显示样式',
+        title: Text(
+          l10n.selectDisplayStyle,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFFE0E0E0) 
+                : const Color(0xFF212121),
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: RecordPresentationStyle.values.map((style) {
+            final isSelected = style == _presentationStyle;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? (isDark ? const Color(0xFF424242) : romanticTheme.primary.withOpacity(0.2))
+                    : (isDark ? const Color(0xFF3A3A3A) : Colors.grey.withOpacity(0.1)),
+                borderRadius: BorderRadius.circular(12),
+                border: isSelected 
+                    ? Border.all(
+                        color: isDark ? const Color(0xFFE0E0E0) : romanticTheme.primary, 
+                        width: 2
+                      )
+                    : null,
+              ),
+              child: ListTile(
+                leading: Icon(
+                  style.icon, 
+                  color: isDark 
+                      ? const Color(0xFFE0E0E0) 
+                      : (isSelected ? romanticTheme.primary : const Color(0xFF212121))
+                ),
+                title: Text(
+                  style.getDisplayName(context),
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: isDark 
+                        ? const Color(0xFFE0E0E0) 
+                        : (isSelected ? romanticTheme.primary : const Color(0xFF212121))
                   ),
                 ),
-                const SizedBox(height: 20),
-                ...RecordPresentationStyle.values.map((style) {
-                  final isSelected = style == _presentationStyle;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? Colors.white.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: isSelected 
-                          ? Border.all(color: Colors.white, width: 2)
-                          : null,
-                    ),
-                    child: ListTile(
-                      leading: Icon(style.icon, color: Colors.white),
-                      title: Text(
-                        style.displayName,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      onTap: () {
-                        _savePresentationStyle(style);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
+                onTap: () {
+                  _savePresentationStyle(style);
+                  Navigator.of(context).pop();
+                },
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -552,6 +551,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 显示主题选择对话框
   void _showThemeSelectionDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -562,7 +562,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '选择浪漫主题',
+                l10n.chooseTheme,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 20),
@@ -578,7 +578,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   itemCount: RomanticTheme.values.length,
                   itemBuilder: (context, index) {
                     final theme = RomanticTheme.values[index];
-                    final themeData = RomanticThemes.getTheme(theme);
+                    final themeData = RomanticThemes.getLocalizedTheme(theme, l10n);
                     final currentTheme = ref.read(themeNotifierProvider).valueOrNull?.romanticTheme;
                     final isSelected = theme == currentTheme;
                     
@@ -768,7 +768,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 获取亮度图标
   IconData _getBrightnessIcon() {
     final themeState = ref.watch(themeNotifierProvider).valueOrNull;
-    if (themeState?.brightness == Brightness.dark) {
+    if (themeState?.brightnessMode == ThemeBrightnessMode.dark) {
       return Icons.light_mode;
     }
     return Icons.dark_mode;
@@ -776,7 +776,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 切换深色/浅色模式
   void _toggleBrightness() {
-    ref.read(themeNotifierProvider.notifier).toggleBrightness();
+    final themeState = ref.read(themeNotifierProvider).valueOrNull;
+    if (themeState != null) {
+      final newMode = themeState.brightnessMode == ThemeBrightnessMode.dark 
+          ? ThemeBrightnessMode.light 
+          : ThemeBrightnessMode.dark;
+      ref.read(themeNotifierProvider.notifier).setBrightnessMode(newMode);
+    }
   }
 }
 

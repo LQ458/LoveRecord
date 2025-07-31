@@ -6,6 +6,7 @@ import '../../data/models/media_file.dart';
 import '../../business_logic/providers/record_provider.dart';
 import '../../business_logic/providers/theme_provider.dart';
 import '../themes/romantic_themes.dart';
+import '../../l10n/app_localizations.dart';
 
 class RecordDetailScreen extends ConsumerStatefulWidget {
   final String recordId;
@@ -735,22 +736,8 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
   }
 
   String _getRecordTypeDisplayName(RecordType type) {
-    switch (type) {
-      case RecordType.diary:
-        return '日记';
-      case RecordType.work:
-        return '工作';
-      case RecordType.study:
-        return '学习';
-      case RecordType.travel:
-        return '旅行';
-      case RecordType.health:
-        return '健康';
-      case RecordType.finance:
-        return '财务';
-      case RecordType.creative:
-        return '创意';
-    }
+    final l10n = AppLocalizations.of(context);
+    return l10n.getRecordTypeDisplayName(type.name);
   }
 
   IconData _getMediaIcon(MediaType type) {

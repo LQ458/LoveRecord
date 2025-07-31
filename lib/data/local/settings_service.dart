@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
   static const String _apiKeyKey = 'api_key';
-  static const String _secretKeyKey = 'secret_key';
   static const String _isFirstLaunchKey = 'is_first_launch';
   static const String _userNameKey = 'user_name';
   static const String _themeModeKey = 'theme_mode';
@@ -37,16 +36,6 @@ class SettingsService {
   /// 设置API密钥
   static Future<void> setApiKey(String apiKey) async {
     await _prefs?.setString(_apiKeyKey, apiKey);
-  }
-
-  /// 获取Secret密钥
-  static String? get secretKey {
-    return _prefs?.getString(_secretKeyKey);
-  }
-
-  /// 设置Secret密钥
-  static Future<void> setSecretKey(String secretKey) async {
-    await _prefs?.setString(_secretKeyKey, secretKey);
   }
 
   /// 获取用户名

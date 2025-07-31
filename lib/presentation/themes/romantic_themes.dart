@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Romantic theme variants for love records
 enum RomanticTheme {
@@ -99,6 +100,57 @@ class RomanticThemes {
   
   static RomanticThemeData getTheme(RomanticTheme theme) {
     return themes[theme]!;
+  }
+  
+  static RomanticThemeData getLocalizedTheme(RomanticTheme theme, AppLocalizations l10n) {
+    final baseTheme = themes[theme]!;
+    return RomanticThemeData(
+      name: _getLocalizedThemeName(theme, l10n),
+      description: _getLocalizedThemeDescription(theme, l10n),
+      primary: baseTheme.primary,
+      secondary: baseTheme.secondary,
+      background: baseTheme.background,
+      surface: baseTheme.surface,
+      accent: baseTheme.accent,
+      textPrimary: baseTheme.textPrimary,
+      textSecondary: baseTheme.textSecondary,
+      gradient: baseTheme.gradient,
+      icon: baseTheme.icon,
+    );
+  }
+  
+  static String _getLocalizedThemeName(RomanticTheme theme, AppLocalizations l10n) {
+    switch (theme) {
+      case RomanticTheme.sweetheartBliss:
+        return l10n.sweetheartBliss;
+      case RomanticTheme.romanticDreams:
+        return l10n.romanticDreams;
+      case RomanticTheme.heartfeltHarmony:
+        return l10n.heartfeltHarmony;
+      case RomanticTheme.vintageRose:
+        return l10n.vintageRose;
+      case RomanticTheme.modernLove:
+        return l10n.modernLove;
+      case RomanticTheme.twilightPassion:
+        return l10n.twilightPassion;
+    }
+  }
+  
+  static String _getLocalizedThemeDescription(RomanticTheme theme, AppLocalizations l10n) {
+    switch (theme) {
+      case RomanticTheme.sweetheartBliss:
+        return l10n.sweetheartBlissDescription;
+      case RomanticTheme.romanticDreams:
+        return l10n.romanticDreamsDescription;
+      case RomanticTheme.heartfeltHarmony:
+        return l10n.heartfeltHarmonyDescription;
+      case RomanticTheme.vintageRose:
+        return l10n.vintageRoseDescription;
+      case RomanticTheme.modernLove:
+        return l10n.modernLoveDescription;
+      case RomanticTheme.twilightPassion:
+        return l10n.twilightPassionDescription;
+    }
   }
   
   static List<RomanticThemeData> getAllThemes() {

@@ -6,7 +6,7 @@ part of 'theme_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentThemeDataHash() => r'a4bbb7bf7e8152dc5a9e8fd298bfe766dbb61802';
+String _$currentThemeDataHash() => r'c452c471db465bdb574bb7d3967760d60f6df7ad';
 
 /// Provider for easy access to current theme data
 ///
@@ -46,7 +46,7 @@ final currentRomanticThemeDataProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentRomanticThemeDataRef = AutoDisposeProviderRef<RomanticThemeData>;
-String _$themeNotifierHash() => r'a1379b38de7da19f562619f445aa1ecf38ea3d3d';
+String _$themeNotifierHash() => r'9f3ff43272e00bf2a78514403900231d083de3a3';
 
 /// See also [ThemeNotifier].
 @ProviderFor(ThemeNotifier)

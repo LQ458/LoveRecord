@@ -9,6 +9,7 @@ import '../../business_logic/providers/theme_provider.dart';
 import '../../services/ai/ai_service_factory.dart';
 import '../../services/ai/ai_service.dart';
 import '../../data/local/settings_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class CreateRecordScreen extends ConsumerStatefulWidget {
   const CreateRecordScreen({super.key});
@@ -39,11 +40,12 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   @override
   Widget build(BuildContext context) {
     final romanticTheme = ref.watch(currentRomanticThemeDataProvider);
+    final l10n = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '创建记录',
+        title: Text(
+          l10n.createRecord,
           style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -61,7 +63,7 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
           IconButton(
             icon: const Icon(Icons.auto_awesome),
             onPressed: _analyzeContent,
-            tooltip: 'AI分析',
+            tooltip: l10n.aiAnalysis,
           ),
           IconButton(
             icon: const Icon(Icons.save),
@@ -514,25 +516,12 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   }
 
   String _getTypeDisplayName(RecordType type) {
-    switch (type) {
-      case RecordType.diary:
-        return '日记';
-      case RecordType.work:
-        return '工作';
-      case RecordType.study:
-        return '学习';
-      case RecordType.travel:
-        return '旅行';
-      case RecordType.health:
-        return '健康';
-      case RecordType.finance:
-        return '财务';
-      case RecordType.creative:
-        return '创意';
-    }
+    final l10n = AppLocalizations.of(context);
+    return l10n.getRecordTypeDisplayName(type.name);
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -551,11 +540,12 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
         });
       }
     } catch (e) {
-      _showError('选择图片失败: $e');
+      _showError(l10n.selectImageFailed.replaceAll('{error}', e.toString()));
     }
   }
 
   Future<void> _pickVideo() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
@@ -574,11 +564,12 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
         });
       }
     } catch (e) {
-      _showError('选择视频失败: $e');
+      _showError(l10n.selectVideoFailed.replaceAll('{error}', e.toString()));
     }
   }
 
   Future<void> _pickFile() async {
+    final l10n = AppLocalizations.of(context);
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles();
       
@@ -596,7 +587,7 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
         });
       }
     } catch (e) {
-      _showError('选择文件失败: $e');
+      _showError(l10n.selectFileFailed.replaceAll('{error}', e.toString()));
     }
   }
 
@@ -652,7 +643,10 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
     });
 
     try {
-      final aiService = AiServiceFactory.createService(SettingsService.aiProvider);
+      final aiService = AiServiceFactory.createService(
+        SettingsService.aiProvider,
+        apiKey: apiKey,
+      );
       final analysis = await aiService.analyzeContent(_contentController.text);
       
       // 添加AI生成的关键词作为标签

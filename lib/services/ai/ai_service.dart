@@ -40,6 +40,9 @@ abstract class AIService {
   /// 生成文本内容
   Future<String> generateText(String prompt);
   
+  /// 测试网络连接
+  Future<bool> testConnection();
+  
   /// 分析内容并返回分类、关键词、摘要等
   Future<ContentAnalysis> analyzeContent(String content);
   
@@ -65,6 +68,7 @@ abstract class AIService {
   Future<String> analyzeImage(String imagePath);
 }
 
+
 /// AI服务提供商枚举
 enum AIProvider {
   ernieBot,    // 百度文心一言
@@ -72,6 +76,7 @@ enum AIProvider {
   hunyuan,     // 腾讯混元
   chatglm,     // 智谱AI
   sparkDesk,   // 讯飞星火
+  mock,        // 模拟AI服务
 }
 
 /// AI服务配置

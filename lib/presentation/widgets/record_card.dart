@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/record.dart';
 import '../../data/models/media_file.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 
 class RecordCard extends StatelessWidget {
   final Record record;
@@ -94,7 +95,7 @@ class RecordCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      _getTypeDisplayName(record.type),
+                      _getTypeDisplayName(context, record.type),
                       style: TextStyle(
                         fontSize: 12,
                         color: _getTypeColor(record.type),
@@ -142,23 +143,9 @@ class RecordCard extends StatelessWidget {
   }
 
   /// 获取类型显示名称
-  String _getTypeDisplayName(RecordType type) {
-    switch (type) {
-      case RecordType.diary:
-        return '日记';
-      case RecordType.work:
-        return '工作';
-      case RecordType.study:
-        return '学习';
-      case RecordType.travel:
-        return '旅行';
-      case RecordType.health:
-        return '健康';
-      case RecordType.finance:
-        return '财务';
-      case RecordType.creative:
-        return '创意';
-    }
+  String _getTypeDisplayName(BuildContext context, RecordType type) {
+    final l10n = AppLocalizations.of(context);
+    return l10n.getRecordTypeDisplayName(type.name);
   }
 
   /// 获取类型颜色

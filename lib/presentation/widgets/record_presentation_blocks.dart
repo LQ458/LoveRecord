@@ -6,6 +6,7 @@ import '../../data/models/media_file.dart';
 import '../../business_logic/providers/theme_provider.dart';
 import '../themes/romantic_themes.dart';
 import 'calendar_view.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Different presentation styles for records
 enum RecordPresentationStyle {
@@ -19,22 +20,23 @@ enum RecordPresentationStyle {
 }
 
 extension RecordPresentationStyleExtension on RecordPresentationStyle {
-  String get displayName {
+  String getDisplayName(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     switch (this) {
       case RecordPresentationStyle.timeline:
-        return '时间轴';
+        return l10n.timeline;
       case RecordPresentationStyle.masonry:
-        return '瀑布流';
+        return l10n.masonry;
       case RecordPresentationStyle.moodBased:
-        return '情感视图';
+        return l10n.moodBased;
       case RecordPresentationStyle.memoryBook:
-        return '回忆录';
+        return l10n.memoryBook;
       case RecordPresentationStyle.compact:
-        return '简洁列表';
+        return l10n.compact;
       case RecordPresentationStyle.calendar:
-        return '日历视图';
+        return l10n.calendar;
       case RecordPresentationStyle.statistics:
-        return '统计视图';
+        return l10n.statistics;
     }
   }
   
@@ -177,6 +179,7 @@ class TimelineRecordView extends ConsumerWidget {
   Widget _buildDateHeader(BuildContext context, DateTime date, RomanticThemeData theme) {
     final isToday = _isToday(date);
     final isYesterday = _isYesterday(date);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     String dateText;
     if (isToday) {
@@ -190,13 +193,17 @@ class TimelineRecordView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.primary.withOpacity(0.1),
+        color: isDark 
+            ? const Color(0xFF424242) 
+            : theme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         dateText,
         style: TextStyle(
-          color: theme.primary,
+          color: isDark 
+              ? const Color(0xFFE0E0E0) 
+              : theme.primary,
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
@@ -222,7 +229,9 @@ class TimelineRecordView extends ConsumerWidget {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: theme.primary,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? const Color(0xFFE0E0E0) 
+                          : theme.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -362,7 +371,7 @@ class MasonryRecordView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (hasMedia) _buildCardMedia(record.mediaFiles.first, theme),
+                            if (hasMedia) _buildCardMedia(context, record.mediaFiles.first, theme),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -407,22 +416,31 @@ class MasonryRecordView extends ConsumerWidget {
     );
   }
   
-  Widget _buildCardMedia(MediaFile mediaFile, RomanticThemeData theme) {
+  Widget _buildCardMedia(BuildContext context, MediaFile mediaFile, RomanticThemeData theme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       height: 120,
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        gradient: LinearGradient(
-          colors: theme.gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark 
+            ? const Color(0xFF2D2D2D) 
+            : null,
+        gradient: isDark 
+            ? null 
+            : LinearGradient(
+                colors: theme.gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
       ),
       child: Center(
         child: Icon(
           _getMediaIcon(mediaFile.type),
           size: 40,
-          color: Colors.white.withOpacity(0.8),
+          color: isDark 
+              ? const Color(0xFFE0E0E0) 
+              : Colors.white.withOpacity(0.8),
         ),
       ),
     );
@@ -464,20 +482,28 @@ class MoodBasedRecordView extends ConsumerWidget {
   
   Widget _buildMoodCard(BuildContext context, Record record, RomanticThemeData theme) {
     final moodColor = _getMoodColor(record, theme);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            moodColor.withOpacity(0.1),
-            moodColor.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark 
+            ? const Color(0xFF2D2D2D) 
+            : null,
+        gradient: isDark 
+            ? null 
+            : LinearGradient(
+                colors: [
+                  moodColor.withOpacity(0.1),
+                  moodColor.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         border: Border.all(
-          color: moodColor.withOpacity(0.3),
+          color: isDark 
+              ? const Color(0xFF3A3A3A) 
+              : moodColor.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -867,12 +893,14 @@ Widget _buildRecordTypeChip(RecordType type, RomanticThemeData theme, {bool isLi
       color: isLight ? Colors.white.withOpacity(0.2) : (isDark ? const Color(0xFF424242) : const Color(0xFFF5F5F5)),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Text(
-      _getRecordTypeDisplayName(type),
-      style: TextStyle(
-        color: isLight ? Colors.white : (isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121)),
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
+    child: Builder(
+      builder: (context) => Text(
+        _getRecordTypeDisplayName(context, type),
+        style: TextStyle(
+          color: isLight ? Colors.white : (isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121)),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     ),
   );
@@ -989,23 +1017,9 @@ IconData _getRecordTypeIcon(RecordType type) {
   }
 }
 
-String _getRecordTypeDisplayName(RecordType type) {
-  switch (type) {
-    case RecordType.diary:
-      return '日记';
-    case RecordType.work:
-      return '工作';
-    case RecordType.study:
-      return '学习';
-    case RecordType.travel:
-      return '旅行';
-    case RecordType.health:
-      return '健康';
-    case RecordType.finance:
-      return '财务';
-    case RecordType.creative:
-      return '创意';
-  }
+String _getRecordTypeDisplayName(BuildContext context, RecordType type) {
+  final l10n = AppLocalizations.of(context);
+  return l10n.getRecordTypeDisplayName(type.name);
 }
 
 IconData _getMediaIcon(MediaType type) {
@@ -1160,7 +1174,9 @@ class StatisticsRecordView extends ConsumerWidget {
                     Icon(_getRecordTypeIcon(entry.key), size: 20, color: theme.secondary),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(_getRecordTypeDisplayName(entry.key)),
+                      child: Builder(
+                        builder: (context) => Text(_getRecordTypeDisplayName(context, entry.key)),
+                      ),
                     ),
                     Text(
                       '${entry.value} ($percentage%)',

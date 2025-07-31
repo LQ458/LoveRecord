@@ -37,61 +37,97 @@ class LoveRecordApp extends ConsumerWidget {
     final themeState = ref.watch(themeNotifierProvider);
     final currentLocale = ref.watch(localeNotifierProvider);
     
-    return themeState.when(
-      data: (state) {
-        final romanticThemeData = RomanticThemes.getTheme(state.romanticTheme);
-        final themeData = romanticThemeData.toThemeData(brightness: state.brightness);
-        
-        return MaterialApp(
-          title: 'LoveRecord',
-          debugShowCheckedModeBanner: false,
-          theme: themeData,
-          themeMode: state.brightness == Brightness.light 
-              ? ThemeMode.light 
-              : ThemeMode.dark,
-          locale: currentLocale.when(
-            data: (locale) => locale,
-            loading: () => const Locale('zh', 'CN'),
-            error: (_, __) => const Locale('zh', 'CN'),
-          ),
-          home: _getInitialScreen(),
-          routes: {
-            '/home': (context) => const HomeScreen(),
-            '/onboarding': (context) => const OnboardingScreen(),
-            '/settings': (context) => const SettingsScreen(),
-            '/create-record': (context) => const CreateRecordScreen(),
-            '/analytics': (context) => const AnalyticsScreen(),
-            '/test': (context) => const TestScreen(),
-          },
-          onGenerateRoute: (settings) {
-            if (settings.name?.startsWith('/record/') == true) {
-              final recordId = settings.name!.substring(8); // 移除 '/record/' 前缀
-              return MaterialPageRoute(
-                builder: (context) => RecordDetailScreen(recordId: recordId),
-              );
-            }
-            return null;
-          },
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-        );
-      },
-      loading: () => MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
+    // 确保在语言或主题变化时强制重建整个应用
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: themeState.when(
+        data: (state) {
+          final romanticThemeData = RomanticThemes.getTheme(state.romanticTheme);
+          final effectiveBrightness = _getEffectiveBrightness(state.brightnessMode);
+          final themeData = romanticThemeData.toThemeData(brightness: effectiveBrightness);
+          
+          return currentLocale.when(
+            data: (locale) => MaterialApp(
+              key: ValueKey('app_${state.hashCode}_${locale.hashCode}'), // 为 MaterialApp 添加 key 以强制重建
+              title: 'LoveRecord',
+              debugShowCheckedModeBanner: false,
+              theme: themeData,
+              themeMode: effectiveBrightness == Brightness.light 
+                  ? ThemeMode.light 
+                  : ThemeMode.dark,
+              locale: locale,
+              home: _getInitialScreen(),
+              routes: {
+                '/home': (context) => const HomeScreen(),
+                '/onboarding': (context) => const OnboardingScreen(),
+                '/settings': (context) => const SettingsScreen(),
+                '/create-record': (context) => const CreateRecordScreen(),
+                '/analytics': (context) => const AnalyticsScreen(),
+                '/test': (context) => const TestScreen(),
+              },
+              onGenerateRoute: (settings) {
+                if (settings.name?.startsWith('/record/') == true) {
+                  final recordId = settings.name!.substring(8); // 移除 '/record/' 前缀
+                  return MaterialPageRoute(
+                    builder: (context) => RecordDetailScreen(recordId: recordId),
+                  );
+                }
+                return null;
+              },
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+            ),
+            loading: () => MaterialApp(
+              locale: const Locale('zh', 'CN'),
+              theme: themeData,
+              home: const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+            ),
+            error: (error, stack) => MaterialApp(
+              locale: const Locale('zh', 'CN'),
+              theme: themeData,
+              home: Scaffold(
+                body: Center(
+                  child: Text('语言加载错误: $error'),
+                ),
+              ),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+            ),
+          );
+        },
+        loading: () => const MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           ),
         ),
-      ),
-      error: (error, stack) => MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Text('Theme loading error: $error'),
+        error: (error, stack) => MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: Text('主题加载错误: $error'),
+            ),
           ),
         ),
       ),
@@ -103,5 +139,18 @@ class LoveRecordApp extends ConsumerWidget {
       return const OnboardingScreen();
     }
     return const HomeScreen();
+  }
+  
+  /// Helper function to get effective brightness
+  Brightness _getEffectiveBrightness(ThemeBrightnessMode mode) {
+    switch (mode) {
+      case ThemeBrightnessMode.light:
+        return Brightness.light;
+      case ThemeBrightnessMode.dark:
+        return Brightness.dark;
+      case ThemeBrightnessMode.system:
+        final window = WidgetsBinding.instance.window;
+        return window.platformBrightness;
+    }
   }
 }
