@@ -89,11 +89,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             icon: Icon(_getBrightnessIcon()),
             onPressed: _toggleBrightness,
-            tooltip: l10n.brightnessMode,
+            tooltip: l10n.brightness,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFilterDialog,
+            tooltip: l10n.filterRecords,
           ),
           IconButton(
             icon: const Icon(Icons.analytics),
@@ -370,6 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 显示过滤器对话框
   void _showFilterDialog() {
+    final l10n = AppLocalizations.of(context);
     final romanticTheme = ref.read(currentRomanticThemeDataProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
@@ -378,7 +380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF5F5F5),
         title: Text(
-          '过滤记录',
+          l10n.filterRecords,
           style: TextStyle(
             color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121),
           ),
@@ -416,7 +418,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Navigator.of(context).pop();
             },
             child: Text(
-              '清除',
+              l10n.clear,
               style: TextStyle(
                 color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121),
               ),
@@ -425,7 +427,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              '取消',
+              l10n.cancel,
               style: TextStyle(
                 color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121),
               ),
@@ -680,7 +682,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: theme.textPrimary,
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.white 
+                  : theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -688,7 +692,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             '开始记录你们的美好时光吧',
             style: TextStyle(
               fontSize: 16,
-              color: theme.textSecondary,
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey[400] 
+                  : theme.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -734,7 +740,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: theme.textPrimary,
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.white 
+                  : theme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -742,7 +750,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             error.toString(),
             style: TextStyle(
               fontSize: 14,
-              color: theme.textSecondary,
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey[400] 
+                  : theme.textSecondary,
             ),
             textAlign: TextAlign.center,
             maxLines: 3,
@@ -768,19 +778,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// 获取亮度图标
   IconData _getBrightnessIcon() {
     final themeState = ref.watch(themeNotifierProvider).valueOrNull;
-    if (themeState?.brightnessMode == ThemeBrightnessMode.dark) {
-      return Icons.light_mode;
+    switch (themeState?.brightnessMode) {
+      case ThemeBrightnessMode.dark:
+        return Icons.light_mode;
+      case ThemeBrightnessMode.light:
+        return Icons.dark_mode;
+      case ThemeBrightnessMode.system:
+        return Icons.brightness_auto;
+      default:
+        return Icons.brightness_auto;
     }
-    return Icons.dark_mode;
   }
 
-  /// 切换深色/浅色模式
+  /// 切换亮度模式
   void _toggleBrightness() {
     final themeState = ref.read(themeNotifierProvider).valueOrNull;
     if (themeState != null) {
-      final newMode = themeState.brightnessMode == ThemeBrightnessMode.dark 
-          ? ThemeBrightnessMode.light 
-          : ThemeBrightnessMode.dark;
+      ThemeBrightnessMode newMode;
+      switch (themeState.brightnessMode) {
+        case ThemeBrightnessMode.light:
+          newMode = ThemeBrightnessMode.dark;
+          break;
+        case ThemeBrightnessMode.dark:
+          newMode = ThemeBrightnessMode.system;
+          break;
+        case ThemeBrightnessMode.system:
+          newMode = ThemeBrightnessMode.light;
+          break;
+        default:
+          newMode = ThemeBrightnessMode.light;
+      }
       ref.read(themeNotifierProvider.notifier).setBrightnessMode(newMode);
     }
   }
@@ -798,6 +825,7 @@ class RecordSearchDelegate extends SearchDelegate<String> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return ThemeData(
+      scaffoldBackgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
       appBarTheme: AppBarTheme(
         backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
         foregroundColor: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121),
@@ -841,6 +869,31 @@ class RecordSearchDelegate extends SearchDelegate<String> {
         hintStyle: TextStyle(
           color: isDark ? const Color(0xFF757575) : const Color(0xFF9E9E9E),
         ),
+      ),
+      cardTheme: CardThemeData(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        elevation: isDark ? 2 : 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      textTheme: TextTheme(
+        titleMedium: TextStyle(
+          color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF212121),
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyMedium: TextStyle(
+          color: isDark ? const Color(0xFFB0B0B0) : const Color(0xFF424242),
+          fontSize: 14,
+        ),
+        bodySmall: TextStyle(
+          color: isDark ? const Color(0xFF757575) : const Color(0xFF757575),
+          fontSize: 12,
+        ),
+      ),
+      iconTheme: IconThemeData(
+        color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF424242),
       ),
     );
   }
@@ -891,29 +944,105 @@ class RecordSearchDelegate extends SearchDelegate<String> {
             }).toList();
 
             if (filteredRecords.isEmpty) {
-              return const Center(
-                child: Text('没有找到匹配的记录'),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 64,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? const Color(0xFF757575) 
+                          : const Color(0xFFBDBDBD),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '没有找到匹配的记录',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? const Color(0xFFB0B0B0) 
+                            : const Color(0xFF424242),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }
 
             return ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: filteredRecords.length,
               itemBuilder: (context, index) {
                 final record = filteredRecords[index];
-                return ListTile(
-                  title: Text(record.title),
-                  subtitle: Text(
-                    record.content,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Text(
+                      record.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          record.content,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        if (record.tags.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 4,
+                            children: record.tags.take(3).map((tag) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? const Color(0xFF2D2D2D) 
+                                      : const Color(0xFFF0F0F0),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  tag,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? const Color(0xFFB0B0B0) 
+                                        : const Color(0xFF424242),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatDate(record.createdAt),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Icon(
+                          _getRecordTypeIcon(record.type),
+                          size: 16,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? const Color(0xFF757575) 
+                              : const Color(0xFF757575),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      close(context, record.id);
+                    },
                   ),
-                  trailing: Text(
-                    _formatDate(record.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  onTap: () {
-                    close(context, record.id);
-                  },
                 );
               },
             );
@@ -939,6 +1068,27 @@ class RecordSearchDelegate extends SearchDelegate<String> {
       return '${difference.inDays}天前';
     } else {
       return '${date.month}/${date.day}';
+    }
+  }
+
+  IconData _getRecordTypeIcon(RecordType type) {
+    switch (type) {
+      case RecordType.diary:
+        return Icons.book;
+      case RecordType.work:
+        return Icons.work;
+      case RecordType.study:
+        return Icons.school;
+      case RecordType.travel:
+        return Icons.flight;
+      case RecordType.health:
+        return Icons.favorite;
+      case RecordType.finance:
+        return Icons.account_balance_wallet;
+      case RecordType.creative:
+        return Icons.palette;
+      default:
+        return Icons.article;
     }
   }
 } 

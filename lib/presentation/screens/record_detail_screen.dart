@@ -45,13 +45,14 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final recordAsync = ref.watch(recordNotifierProvider(widget.recordId));
     final romanticTheme = ref.watch(currentRomanticThemeDataProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isEditing ? '编辑记录' : '记录详情',
+          _isEditing ? l10n.editRecord : l10n.recordDetails,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
           ),
@@ -61,23 +62,23 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () => _startEditing(),
-              tooltip: '编辑',
+              tooltip: l10n.edit,
             ),
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () => _showDeleteDialog(),
-              tooltip: '删除',
+              tooltip: l10n.delete,
             ),
           ] else ...[
             IconButton(
               icon: const Icon(Icons.save),
               onPressed: () => _saveRecord(),
-              tooltip: '保存',
+              tooltip: l10n.save,
             ),
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => _cancelEditing(),
-              tooltip: '取消',
+              tooltip: l10n.cancel,
             ),
           ],
         ],
@@ -203,7 +204,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                 record.title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.textPrimary,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -245,7 +248,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                   Text(
                     DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(record.createdAt),
                     style: TextStyle(
-                      color: theme.textSecondary,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.grey[400] 
+                          : theme.textSecondary,
                       fontSize: 14,
                     ),
                   ),
@@ -267,7 +272,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: theme.textPrimary,
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white 
+                : theme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -293,6 +300,7 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
   }
 
   Widget _buildContent(Record record, RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -304,11 +312,13 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                 Icon(Icons.edit_note, color: theme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '内容',
+                  l10n.content,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: theme.textPrimary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -335,13 +345,17 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                   border: Border.all(color: theme.secondary.withOpacity(0.2)),
                 ),
                 child: Text(
-                  record.content.isEmpty ? '暂无内容' : record.content,
+                  record.content.isEmpty ? l10n.noContent : record.content,
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.6,
                     color: record.content.isEmpty 
-                        ? theme.textSecondary 
-                        : theme.textPrimary,
+                        ? (Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.grey[400] 
+                            : theme.textSecondary)
+                        : (Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white 
+                            : theme.textPrimary),
                   ),
                 ),
               ),
@@ -353,15 +367,18 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
   }
 
   Widget _buildTagsEditor(RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '标签',
+          l10n.tags,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: theme.textPrimary,
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white 
+                : Colors.black87,
           ),
         ),
         const SizedBox(height: 12),
@@ -384,9 +401,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
           children: [
             Expanded(
               child: TextField(
-                decoration: const InputDecoration(
-                  hintText: '添加新标签',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: l10n.addNewTag,
+                  border: const OutlineInputBorder(),
                 ),
                 onSubmitted: (value) {
                   if (value.isNotEmpty && !_tags.contains(value)) {
@@ -419,14 +436,18 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: theme.textPrimary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '${record.mediaFiles.length} 个文件',
                   style: TextStyle(
-                    color: theme.textSecondary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey[400] 
+                        : theme.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -482,6 +503,7 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
   }
 
   Widget _buildTagsSection(Record record, RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -493,11 +515,13 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                 Icon(Icons.local_offer, color: theme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '标签',
+                  l10n.tags,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: theme.textPrimary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -517,8 +541,10 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                   child: Text(
                     tag,
                     style: TextStyle(
-                      color: theme.textPrimary,
-                      fontWeight: FontWeight.w500,
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : theme.textPrimary,
+                    fontWeight: FontWeight.w500,
                     ),
                   ),
                 );
@@ -531,6 +557,7 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
   }
 
   Widget _buildMetadata(Record record, RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -542,11 +569,13 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                 Icon(Icons.info_outline, color: theme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '记录信息',
+                  l10n.recordInfo,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: theme.textPrimary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -562,7 +591,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: theme.textPrimary,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
@@ -576,7 +607,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
                   record.metadata.toString(),
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.textSecondary,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey[400] 
+                        : theme.textSecondary,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -601,7 +634,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: theme.textSecondary,
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.grey[400] 
+                    : theme.textSecondary,
               ),
             ),
           ),
@@ -610,7 +645,9 @@ class _RecordDetailScreenState extends ConsumerState<RecordDetailScreen> {
               value,
               style: TextStyle(
                 fontSize: 14,
-                color: theme.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white 
+                    : theme.textPrimary,
               ),
             ),
           ),

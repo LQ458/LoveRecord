@@ -117,7 +117,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: theme.textSecondary,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : theme.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -235,13 +235,13 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             Icon(
               Icons.event_note,
               size: 48,
-              color: theme.textSecondary,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : theme.textSecondary,
             ),
             const SizedBox(height: 12),
             Text(
               '${DateFormat('M月d日').format(_selectedDate)} 没有记录',
               style: TextStyle(
-                color: theme.textSecondary,
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : theme.textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -260,7 +260,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: theme.textPrimary,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : theme.textPrimary,
             ),
           ),
         ),
@@ -292,7 +292,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                   DateFormat('HH:mm').format(record.createdAt),
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.textSecondary,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : theme.textSecondary,
                   ),
                 ),
               ],

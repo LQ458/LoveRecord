@@ -231,7 +231,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get romanticTheme => '浪漫主题';
 
   @override
-  String get brightnessMode => '亮度模式';
+  String get brightness => '亮度';
 
   @override
   String get language => '语言';
@@ -517,6 +517,12 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get deleteRecordWarning => '确定要删除这条记录吗？此操作无法撤销。';
 
+  @override
+  String get recordInfo => '记录信息';
+
+  @override
+  String get noContent => '暂无内容';
+
   // Onboarding Screen
   @override
   String get welcomeToLoveRecord => '欢迎使用LoveRecord';
@@ -741,6 +747,24 @@ class AppLocalizationsZh extends AppLocalizations {
       default: return type;
     }
   }
+
+  @override
+  String get allRecords => '全部记录';
+
+  @override
+  String get diaryRecords => '日记';
+
+  @override
+  String get workRecords => '工作';
+
+  @override
+  String get studyRecords => '学习';
+
+  @override
+  String get lifeRecords => '生活';
+
+  @override
+  String get otherRecords => '其他';
   
   @override
   String getEmotionDisplayName(String emotion) {

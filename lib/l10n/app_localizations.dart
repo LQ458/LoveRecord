@@ -104,7 +104,7 @@ abstract class AppLocalizations {
   String get test;
   String get appearanceSettings;
   String get romanticTheme;
-  String get brightnessMode;
+  String get brightness;
   String get language;
   String get light;
   String get dark;
@@ -210,6 +210,8 @@ abstract class AppLocalizations {
   String get recordUpdated;
   String get confirmDeleteRecordDetail;
   String get deleteRecordWarning;
+  String get recordInfo;
+  String get noContent;
   
   // Onboarding Screen
   String get welcomeToLoveRecord;
@@ -295,6 +297,14 @@ abstract class AppLocalizations {
   String getRecordTypeDisplayName(String type);
   String getEmotionDisplayName(String emotion);
   String getThemeDisplayName(String theme);
+  
+  // Filter Options
+  String get allRecords;
+  String get diaryRecords;
+  String get workRecords;
+  String get studyRecords;
+  String get lifeRecords;
+  String get otherRecords;
   
   // Date and Time Formatting
   String get justNow;

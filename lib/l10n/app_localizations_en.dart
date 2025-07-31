@@ -231,7 +231,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get romanticTheme => 'Romantic Theme';
 
   @override
-  String get brightnessMode => 'Brightness Mode';
+  String get brightness => 'Brightness';
 
   @override
   String get language => 'Language';
@@ -517,6 +517,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteRecordWarning => 'Are you sure you want to delete this record? This action cannot be undone.';
 
+  @override
+  String get recordInfo => 'Record Info';
+
+  @override
+  String get noContent => 'No content';
+
   // Onboarding Screen
   @override
   String get welcomeToLoveRecord => 'Welcome to LoveRecord';
@@ -741,6 +747,24 @@ class AppLocalizationsEn extends AppLocalizations {
       default: return type;
     }
   }
+
+  @override
+  String get allRecords => 'All Records';
+
+  @override
+  String get diaryRecords => 'Diary';
+
+  @override
+  String get workRecords => 'Work';
+
+  @override
+  String get studyRecords => 'Study';
+
+  @override
+  String get lifeRecords => 'Life';
+
+  @override
+  String get otherRecords => 'Other';
   
   @override
   String getEmotionDisplayName(String emotion) {
