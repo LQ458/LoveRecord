@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../data/models/record.dart';
 import '../../business_logic/providers/theme_provider.dart';
 import '../themes/romantic_themes.dart';
+import '../../l10n/app_localizations.dart';
 
 class CalendarView extends ConsumerStatefulWidget {
   final List<Record> records;
@@ -110,7 +111,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
-              children: ['日', '一', '二', '三', '四', '五', '六'].map((day) {
+              children: AppLocalizations.of(context).weekDaysShort.map((day) {
                 return Expanded(
                   child: Text(
                     day,

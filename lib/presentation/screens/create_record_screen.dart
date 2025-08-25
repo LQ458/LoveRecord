@@ -96,6 +96,7 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   }
 
   Widget _buildTypeSelector() {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -103,7 +104,7 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '记录类型',
+              l10n.recordType,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
@@ -112,14 +113,24 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
               children: RecordType.values.map((type) {
                 final isSelected = _selectedType == type;
                 return FilterChip(
-                  label: Text(_getTypeDisplayName(type)),
+                  label: Text(
+                    _getTypeDisplayName(type),
+                    style: TextStyle(
+                      color: isSelected 
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
                   selected: isSelected,
                   onSelected: (selected) {
                     setState(() {
                       _selectedType = type;
                     });
                   },
-                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  checkmarkColor: Colors.white,
                 );
               }).toList(),
             ),
@@ -130,24 +141,26 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   }
 
   Widget _buildTitleField() {
+    final l10n = AppLocalizations.of(context);
     return TextField(
       controller: _titleController,
-      decoration: const InputDecoration(
-        labelText: '标题',
-        hintText: '请输入记录标题',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: l10n.title,
+        hintText: l10n.pleaseEnterTitle,
+        border: const OutlineInputBorder(),
       ),
       textInputAction: TextInputAction.next,
     );
   }
 
   Widget _buildContentField() {
+    final l10n = AppLocalizations.of(context);
     return TextField(
       controller: _contentController,
-      decoration: const InputDecoration(
-        labelText: '内容',
-        hintText: '记录你的想法、感受或经历...',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: l10n.content,
+        hintText: l10n.pleaseEnterContent,
+        border: const OutlineInputBorder(),
         alignLabelWithHint: true,
       ),
       maxLines: 8,

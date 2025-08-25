@@ -598,8 +598,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: isSelected 
-                              ? Border.all(color: Colors.black54, width: 3)
-                              : null,
+                              ? Border.all(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white
+                                      : Theme.of(context).colorScheme.primary,
+                                  width: 3
+                                )
+                              : Border.all(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.grey.withOpacity(0.3),
+                                  width: 1
+                                ),
                           boxShadow: [
                             BoxShadow(
                               color: themeData.primary.withOpacity(0.3),
@@ -656,6 +666,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 构建空状态
   Widget _buildEmptyState(RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -678,7 +689,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            '还没有爱的记录',
+            l10n.noRecordsYet,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -689,7 +700,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '开始记录你们的美好时光吧',
+            l10n.startRecordingMemories,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).brightness == Brightness.dark 
@@ -701,7 +712,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ElevatedButton.icon(
             onPressed: _createNewRecord,
             icon: const Icon(Icons.add),
-            label: const Text('创建第一条记录'),
+            label: Text(l10n.createFirstRecord),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
               foregroundColor: Colors.white,
@@ -718,6 +729,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// 构建错误状态
   Widget _buildErrorState(Object error, RomanticThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -736,7 +748,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            '加载失败',
+            l10n.loadFailed,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -764,7 +776,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ref.invalidate(recordsNotifierProvider);
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('重试'),
+            label: Text(l10n.retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
               foregroundColor: Colors.white,
@@ -957,7 +969,7 @@ class RecordSearchDelegate extends SearchDelegate<String> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '没有找到匹配的记录',
+                      AppLocalizations.of(context).noMatchingRecords,
                       style: TextStyle(
                         fontSize: 16,
                         color: Theme.of(context).brightness == Brightness.dark 
@@ -1026,7 +1038,7 @@ class RecordSearchDelegate extends SearchDelegate<String> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          _formatDate(record.createdAt),
+                          _formatDate(record.createdAt, context),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 4),
@@ -1049,26 +1061,16 @@ class RecordSearchDelegate extends SearchDelegate<String> {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
-            child: Text('搜索出错: $error'),
+            child: Text('${AppLocalizations.of(context).searchError}: $error'),
           ),
         );
       },
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return '今天';
-    } else if (difference.inDays == 1) {
-      return '昨天';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}天前';
-    } else {
-      return '${date.month}/${date.day}';
-    }
+  String _formatDate(DateTime date, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return l10n.formatRelativeTime(date);
   }
 
   IconData _getRecordTypeIcon(RecordType type) {

@@ -553,8 +553,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (_selectedAiProvider == 'mock') {
         // 模拟服务不需要网络测试
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('正在测试模拟AI服务...'),
+          SnackBar(
+            content: Text(l10n.connectionTest),
             backgroundColor: Colors.blue,
           ),
         );
@@ -584,14 +584,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('API测试成功'),
+            title: Text(l10n.apiTestSuccess),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('提供商: ${_getAiProviderDisplayName(_selectedAiProvider)}'),
+                Text('${l10n.provider}: ${_getAiProviderDisplayName(_selectedAiProvider)}'),
                 const SizedBox(height: 12),
-                const Text('响应内容:'),
+                Text(l10n.responseContent),
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -618,7 +618,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('API测试失败: $e'),
+            content: Text('${l10n.apiTestFailed}: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -841,8 +841,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: isSelected 
-                              ? Border.all(color: Colors.white, width: 3)
-                              : Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                              ? Border.all(
+                                  color: currentTheme.brightness == Brightness.dark
+                                      ? Colors.white
+                                      : currentTheme.colorScheme.primary,
+                                  width: 3
+                                )
+                              : Border.all(
+                                  color: currentTheme.brightness == Brightness.dark
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.grey.withOpacity(0.3),
+                                  width: 1
+                                ),
                           boxShadow: [
                             BoxShadow(
                               color: themeData.primary.withOpacity(0.3),
