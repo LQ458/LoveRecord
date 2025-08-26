@@ -128,7 +128,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
           ),
           
           // Calendar grid - Fixed height container
-          Container(
+          SizedBox(
             height: 240, // Fixed height for 6 weeks * 40px
             child: Column(
               children: List.generate(6, (weekIndex) {
@@ -331,7 +331,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
             ),
             onTap: () => widget.onTap(record),
           ),
-        )).toList(),
+        )),
       ],
     );
   }

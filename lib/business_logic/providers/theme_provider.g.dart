@@ -46,7 +46,7 @@ final currentRomanticThemeDataProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentRomanticThemeDataRef = AutoDisposeProviderRef<RomanticThemeData>;
-String _$themeNotifierHash() => r'9f3ff43272e00bf2a78514403900231d083de3a3';
+String _$themeNotifierHash() => r'28230628a61280a71daa70fa9a3b68548ba0a1e1';
 
 /// See also [ThemeNotifier].
 @ProviderFor(ThemeNotifier)

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
@@ -10,6 +9,7 @@ class SettingsService {
   static const String _aiProviderKey = 'ai_provider';
   static const String _autoBackupKey = 'auto_backup';
   static const String _backupFrequencyKey = 'backup_frequency';
+  static const String _lastBackupTimeKey = 'last_backup_time';
 
   static SharedPreferences? _prefs;
 
@@ -70,7 +70,7 @@ class SettingsService {
 
   /// 获取AI提供商
   static String get aiProvider {
-    return _prefs?.getString(_aiProviderKey) ?? 'ernie_bot';
+    return _prefs?.getString(_aiProviderKey) ?? 'dashscope';
   }
 
   /// 设置AI提供商
@@ -96,6 +96,17 @@ class SettingsService {
   /// 设置备份频率
   static Future<void> setBackupFrequency(String frequency) async {
     await _prefs?.setString(_backupFrequencyKey, frequency);
+  }
+
+  /// 获取最后备份时间
+  static DateTime? get lastBackupTime {
+    final timestamp = _prefs?.getInt(_lastBackupTimeKey);
+    return timestamp != null ? DateTime.fromMillisecondsSinceEpoch(timestamp) : null;
+  }
+
+  /// 设置最后备份时间
+  static Future<void> setLastBackupTime(DateTime time) async {
+    await _prefs?.setInt(_lastBackupTimeKey, time.millisecondsSinceEpoch);
   }
 
   /// 清除所有设置

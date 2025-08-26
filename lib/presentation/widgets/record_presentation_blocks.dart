@@ -1188,7 +1188,7 @@ class StatisticsRecordView extends ConsumerWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

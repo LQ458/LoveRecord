@@ -129,8 +129,6 @@ class AppTheme {
         onSecondary: _isDarkTheme() ? Colors.black : Colors.white,
         error: errorColor,
         onError: _isDarkTheme() ? Colors.black : Colors.white,
-        background: backgroundColor,
-        onBackground: textColor,
         surface: surfaceColor,
         onSurface: textColor,
         outline: dividerColor,

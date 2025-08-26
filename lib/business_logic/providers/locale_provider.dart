@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'dart:developer' as developer;
 import '../../data/local/settings_service.dart';
 
 part 'locale_provider.g.dart';
@@ -8,16 +9,53 @@ part 'locale_provider.g.dart';
 class LocaleNotifier extends _$LocaleNotifier {
   @override
   Future<Locale> build() async {
-    final languageCode = SettingsService.language;
-    return _getLocaleFromLanguageCode(languageCode);
+    try {
+      developer.log('🌍 开始加载语言设置...', name: 'LocaleNotifier');
+      
+      final languageCode = SettingsService.language;
+      developer.log('🌍 当前语言代码: $languageCode', name: 'LocaleNotifier');
+      
+      final locale = _getLocaleFromLanguageCode(languageCode);
+      developer.log('✅ 语言设置加载完成: $locale', name: 'LocaleNotifier');
+      
+      return locale;
+    } catch (e, stackTrace) {
+      developer.log(
+        '❌ 语言设置加载失败: $e',
+        name: 'LocaleNotifier',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      
+      // 返回默认语言
+      return const Locale('zh', 'CN');
+    }
   }
 
   /// Change the app locale
   Future<void> changeLocale(String languageCode) async {
-    await SettingsService.setLanguage(languageCode);
-    state = AsyncValue.data(_getLocaleFromLanguageCode(languageCode));
-    // 强制重建以应用新语言
-    ref.invalidateSelf();
+    try {
+      developer.log('🌍 开始更改语言: $languageCode', name: 'LocaleNotifier');
+      
+      await SettingsService.setLanguage(languageCode);
+      final newLocale = _getLocaleFromLanguageCode(languageCode);
+      state = AsyncValue.data(newLocale);
+      
+      developer.log('✅ 语言更改完成: $newLocale', name: 'LocaleNotifier');
+      
+      // 强制重建以应用新语言
+      ref.invalidateSelf();
+    } catch (e, stackTrace) {
+      developer.log(
+        '❌ 语言更改失败: $e',
+        name: 'LocaleNotifier',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      
+      // 设置错误状态
+      state = AsyncValue.error(e, stackTrace);
+    }
   }
 
   /// Get locale from language code

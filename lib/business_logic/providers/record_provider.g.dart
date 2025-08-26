@@ -23,7 +23,7 @@ final databaseServiceProvider = AutoDisposeProvider<DatabaseService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseServiceRef = AutoDisposeProviderRef<DatabaseService>;
-String _$recordsNotifierHash() => r'90947ce3903a9eb309de49afcab19799aeb04ded';
+String _$recordsNotifierHash() => r'542ba8b26183156f3884fe16c25e03bccffa6462';
 
 /// See also [RecordsNotifier].
 @ProviderFor(RecordsNotifier)
@@ -221,21 +221,5 @@ final tagsNotifierProvider =
 );
 
 typedef _$TagsNotifier = AutoDisposeAsyncNotifier<List<String>>;
-String _$aIServiceNotifierHash() => r'fc3f811b7b1eb7f16d7bc9f01e6cfa0d10969742';
-
-/// See also [AIServiceNotifier].
-@ProviderFor(AIServiceNotifier)
-final aIServiceNotifierProvider =
-    AutoDisposeNotifierProvider<AIServiceNotifier, AIService?>.internal(
-  AIServiceNotifier.new,
-  name: r'aIServiceNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$aIServiceNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$AIServiceNotifier = AutoDisposeNotifier<AIService?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

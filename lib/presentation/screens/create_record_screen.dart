@@ -24,8 +24,8 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   final TextEditingController _tagsController = TextEditingController();
   
   RecordType _selectedType = RecordType.diary;
-  List<MediaFile> _mediaFiles = [];
-  List<String> _tags = [];
+  final List<MediaFile> _mediaFiles = [];
+  final List<String> _tags = [];
   bool _isLoading = false;
   bool _isAnalyzing = false;
 
@@ -645,9 +645,16 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
       return;
     }
 
+    // 检查配置
+    final provider = SettingsService.aiProvider;
     final apiKey = SettingsService.apiKey;
+    
+    print('Debug - AI Provider: $provider');
+    print('Debug - API Key exists: ${apiKey?.isNotEmpty ?? false}');
+    print('Debug - API Key length: ${apiKey?.length ?? 0}');
+    
     if (apiKey == null || apiKey.isEmpty) {
-      _showError('请先在设置中配置API密钥');
+      _showError('请先在设置中配置API密钥\n\n当前配置:\n提供商: $provider\nAPI Key: 未配置');
       return;
     }
 
@@ -656,11 +663,24 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
     });
 
     try {
+      print('Debug - Creating AI service with provider: $provider');
       final aiService = AiServiceFactory.createService(
-        SettingsService.aiProvider,
+        provider,
         apiKey: apiKey,
       );
+      
+      print('Debug - Testing connection...');
+      final connectionTest = await aiService.testConnection();
+      print('Debug - Connection test result: $connectionTest');
+      
+      if (!connectionTest) {
+        _showError('AI服务连接测试失败\n\n请检查:\n• 网络连接\n• API Key是否正确\n• 账户余额是否充足');
+        return;
+      }
+      
+      print('Debug - Analyzing content...');
       final analysis = await aiService.analyzeContent(_contentController.text);
+      print('Debug - Analysis completed: ${analysis.keywords.length} keywords, ${analysis.categories.length} categories');
       
       // 添加AI生成的关键词作为标签
       if (analysis.keywords.isNotEmpty) {
@@ -676,7 +696,8 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
       // 显示分析结果
       _showAnalysisResult(analysis);
     } catch (e) {
-      _showError('AI分析失败: $e');
+      print('Debug - AI analysis error: $e');
+      _showError('AI分析失败: $e\n\n配置信息:\n提供商: $provider\nAPI Key: ${apiKey.substring(0, 8)}...');
     } finally {
       setState(() {
         _isAnalyzing = false;

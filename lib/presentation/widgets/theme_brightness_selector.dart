@@ -183,7 +183,7 @@ class ThemeBrightnessSlider extends ConsumerWidget {
                     return Expanded(
                       child: GestureDetector(
                         onTap: () => _onModeChanged(ref, mode),
-                        child: Container(
+                        child: SizedBox(
                           height: 60,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,

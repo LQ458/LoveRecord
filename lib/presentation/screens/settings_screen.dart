@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../data/local/settings_service.dart';
-import '../../data/local/database_service.dart';
 import '../../business_logic/providers/theme_provider.dart';
 import '../../business_logic/providers/locale_provider.dart';
 import '../themes/romantic_themes.dart';
 import '../../services/ai/ai_service_factory.dart';
-import '../../services/ai/ai_service.dart';
+import '../../services/ai/dashscope_test.dart';
 import '../../l10n/app_localizations.dart';
 import '../widgets/theme_brightness_selector.dart';
 
@@ -21,7 +20,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  String _selectedAiProvider = 'ernie_bot';
+  String _selectedAiProvider = 'dashscope';
   RomanticTheme _selectedRomanticTheme = RomanticTheme.sweetheartBliss;
   ThemeBrightnessMode _selectedBrightnessMode = ThemeBrightnessMode.system;
   String _selectedLanguage = 'zh_CN';
@@ -182,8 +181,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               value: _selectedAiProvider,
               items: [
                 const DropdownMenuItem(
+                  value: 'dashscope',
+                  child: Text('通义千问（推荐）'),
+                ),
+                const DropdownMenuItem(
                   value: 'ernie_bot',
                   child: Text('文心一言'),
+                ),
+                const DropdownMenuItem(
+                  value: 'openai',
+                  child: Text('OpenAI GPT'),
                 ),
                 const DropdownMenuItem(
                   value: 'mock',
@@ -416,19 +423,145 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  String _getConfigGuideTitle() {
+    switch (_selectedAiProvider) {
+      case 'dashscope':
+        return '通义千问 (DashScope)';
+      case 'ernie_bot':
+        return '文心一言 (ERNIE Bot)';
+      case 'openai':
+        return 'OpenAI GPT';
+      default:
+        return '通义千问 (DashScope)';
+    }
+  }
+
+  String _getProviderName() {
+    switch (_selectedAiProvider) {
+      case 'dashscope':
+        return '通义千问';
+      case 'ernie_bot':
+        return '文心一言';
+      case 'openai':
+        return 'OpenAI';
+      default:
+        return '通义千问';
+    }
+  }
+
+  List<Widget> _getConfigSteps() {
+    switch (_selectedAiProvider) {
+      case 'dashscope':
+        return const [
+          Text('1. 访问阿里云模型服务灵积 (DashScope)'),
+          Text('   https://dashscope.console.aliyun.com/'),
+          Text('2. 注册阿里云账户并完成实名认证'),
+          Text('3. 进入 API Key 管理页面'),
+          Text('4. 点击"创建新的API Key"'),
+          Text('5. 复制生成的 API Key'),
+          Text('6. 将 API Key 粘贴到设置中'),
+          Text(''),
+          Text('💡 注意：DashScope只需要API Key，无需Client Secret'),
+        ];
+      case 'ernie_bot':
+        return const [
+          Text('1. 访问百度智能云千帆平台'),
+          Text('   https://console.bce.baidu.com/qianfan/'),
+          Text('2. 注册并完成实名认证'),
+          Text('3. 在"应用接入"中创建新应用'),
+          Text('4. 获取 Client ID 和 Client Secret'),
+          Text('5. 开通ERNIE Bot服务权限'),
+          Text('6. 将Client ID填入API密钥框'),
+        ];
+      case 'openai':
+        return const [
+          Text('1. 访问 OpenAI 官方平台'),
+          Text('   https://platform.openai.com/'),
+          Text('2. 注册 OpenAI 账户'),
+          Text('3. 进入 API Keys 页面'),
+          Text('4. 点击 "Create new secret key"'),
+          Text('5. 复制生成的 API Key'),
+          Text('6. 将 API Key 粘贴到设置中'),
+        ];
+      default:
+        return const [Text('请选择AI服务提供商')];
+    }
+  }
+
+  List<Widget> _getProviderAdvantages() {
+    switch (_selectedAiProvider) {
+      case 'dashscope':
+        return const [
+          Text('• 国际版支持海外访问，无需VPN'),
+          Text('• 中文理解能力极强'),
+          Text('• 阿里云稳定可靠的基础设施'),
+          Text('• 价格便宜，性价比高'),
+          Text('• 支持多模态功能'),
+        ];
+      case 'ernie_bot':
+        return const [
+          Text('• 百度自研大语言模型'),
+          Text('• 中文对话能力优秀'),
+          Text('• 知识图谱丰富'),
+          Text('• 支持插件和工具调用'),
+        ];
+      case 'openai':
+        return const [
+          Text('• 全球访问无障碍，无需VPN'),
+          Text('• 支持多种语言，包括中文'),
+          Text('• 稳定可靠的API服务'),
+          Text('• 按使用量付费，价格透明'),
+        ];
+      default:
+        return const [Text('请选择AI服务提供商')];
+    }
+  }
+
+  List<Widget> _getTroubleshootingSteps() {
+    switch (_selectedAiProvider) {
+      case 'dashscope':
+        return const [
+          Text('1. 确认API Key格式正确'),
+          Text('2. 检查阿里云账户余额'),
+          Text('3. 验证服务是否已开通'),
+          Text('4. 检查网络连接稳定'),
+          Text('5. 尝试重新生成API Key'),
+        ];
+      case 'ernie_bot':
+        return const [
+          Text('1. 检查网络连接（海外用户可能需要VPN）'),
+          Text('2. 确认API密钥格式正确'),
+          Text('3. 验证服务是否已开通'),
+          Text('4. 检查账户余额和配额'),
+          Text('5. 尝试重新生成API密钥'),
+        ];
+      case 'openai':
+        return const [
+          Text('1. 确认API Key格式正确'),
+          Text('2. 检查账户余额是否充足'),
+          Text('3. 验证网络连接稳定'),
+          Text('4. 检查API使用配额'),
+        ];
+      default:
+        return const [Text('请选择AI服务提供商')];
+    }
+  }
+
   String _getAiProviderDisplayName(String provider) {
     final l10n = AppLocalizations.of(context);
     switch (provider) {
+      case 'dashscope':
+        return '通义千问 (DashScope)'; // 阿里云
       case 'ernie_bot':
-        return '文心一言'; // Keep brand name as is
+        return '文心一言 (ERNIE Bot)'; // 百度
       case 'openai':
         return 'OpenAI GPT'; // Keep brand name as is
-      case 'claude':
-        return 'Claude'; // Keep brand name as is
       case 'mock':
         return l10n.mockAiServiceNotice;
+      case 'claude':
+        return 'Claude'; // Keep brand name as is (for future use)
       default:
-        return '文心一言';
+        return '通义千问 (DashScope)'; // Default to DashScope for Chinese users
     }
   }
 
@@ -482,37 +615,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               Text(l10n.configureApiKeyDescription),
               const SizedBox(height: 12),
-              const Text('1. 访问 百度智能云 Qianfan 平台'), // Keep specific instructions
-              const Text('   https://console.bce.baidu.com/qianfan/'),
+              Text('🚀 ${_getConfigGuideTitle()} 配置指南（2024）：'),
               const SizedBox(height: 8),
-              const Text('2. 注册并登录百度账号'),
-              const SizedBox(height: 8),
-              const Text('3. 开通文心一言服务'),
-              const SizedBox(height: 8),
-              const Text('4. 在应用管理中创建应用'),
-              const SizedBox(height: 8),
-              const Text('5. 获取 Client ID 和 Client Secret'),
-              SizedBox(height: 8),
-              Text('6. 将 Client ID 填入API密钥框'),
-              SizedBox(height: 12),
-              Text('注意事项：'),
-              Text('• 需要实名认证后才能使用'),
-              Text('• 新用户可获得免费额度'),
-              Text('• 使用量超出后按量计费'),
-              SizedBox(height: 12),
-              Text('故障排查：'),
-              Text('• 检查网络连接是否正常'),
-              Text('• 确认API密钥是否正确'),
-              Text('• 确认服务是否已开通'),
-              Text('2. 注册并登录百度智能云账号'),
-              Text('3. 开通文心一言服务'),
-              Text('4. 在控制台获取API Key'),
-              Text('5. 将API Key粘贴到设置中'),
-              SizedBox(height: 16),
-              Text('注意事项：'),
-              Text('• 确保网络连接正常'),
-              Text('• API Key需要妥善保管'),
-              Text('• 如遇连接问题，请检查网络设置'),
+              ..._getConfigSteps(),
+              const SizedBox(height: 12),
+              Text('✅ ${_getProviderName()} 优势：'),
+              ..._getProviderAdvantages(),
+              const SizedBox(height: 12),
+              if (_selectedAiProvider == 'dashscope') ...[
+                const Text('💰 费用参考（Qwen-Plus）：'),
+                const Text('• 约 ¥0.004 / 1K tokens'),
+                const Text('• 新用户送免费额度'),
+                const Text('• 约1000个中文字符 ≈ 500 tokens'),
+              ] else if (_selectedAiProvider == 'openai') ...[
+                const Text('💰 费用参考（GPT-3.5 Turbo）：'),
+                const Text('• 输入：\$0.0015 / 1K tokens'),
+                const Text('• 输出：\$0.002 / 1K tokens'),
+                const Text('• 约1000个中文字符 ≈ 500 tokens'),
+              ] else if (_selectedAiProvider == 'ernie_bot') ...[
+                const Text('💰 费用参考（ERNIE-Bot）：'),
+                const Text('• 约 ¥0.012 / 1K tokens'),
+                const Text('• 新用户送免费额度'),
+                const Text('• 需要实名认证'),
+              ],
+              const SizedBox(height: 12),
+              const Text('🔧 故障排查：'),
+              ..._getTroubleshootingSteps(),
             ],
           ),
         ),
@@ -532,7 +660,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     final apiKey = _apiKeyController.text.trim();
     
-    if (_selectedAiProvider == 'ernie_bot') {
+    if (_selectedAiProvider != 'mock') {
       if (apiKey.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -544,76 +672,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     }
 
+    // Show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('正在测试API连接...'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+
     try {
-      final aiService = AiServiceFactory.createService(
-        _selectedAiProvider,
-        apiKey: apiKey,
-      );
+      bool testResult = false;
       
       if (_selectedAiProvider == 'mock') {
-        // 模拟服务不需要网络测试
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.connectionTest),
-            backgroundColor: Colors.blue,
-          ),
-        );
+        testResult = true;
+      } else if (_selectedAiProvider == 'dashscope') {
+        // Use simplified test for DashScope
+        testResult = await DashScopeTest.testApiKey(apiKey);
       } else {
-        // 先测试网络连接
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('正在测试网络连接...'),
-            backgroundColor: Colors.blue,
-          ),
+        // Use factory for other services
+        final aiService = AiServiceFactory.createService(
+          _selectedAiProvider,
+          apiKey: apiKey,
         );
-        
-        await aiService.testConnection();
-        
-        // 网络连接成功，测试API功能
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('网络连接正常，正在测试API功能...'),
-            backgroundColor: Colors.blue,
-          ),
-        );
+        testResult = await aiService.testConnection();
       }
       
-      final result = await aiService.generateText('你好，请简单回复一句话。');
-      
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(l10n.apiTestSuccess),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${l10n.provider}: ${_getAiProviderDisplayName(_selectedAiProvider)}'),
-                const SizedBox(height: 12),
-                Text(l10n.responseContent),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    result.length > 100 ? '${result.substring(0, 100)}...' : result,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
+      if (testResult) {
+        // Test successful
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ API连接测试成功！'),
+              backgroundColor: Colors.green,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.ok),
-              ),
-            ],
-          ),
-        );
+          );
+        }
+      } else {
+        throw Exception('API连接测试失败');
       }
+
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

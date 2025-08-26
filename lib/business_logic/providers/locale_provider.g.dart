@@ -25,7 +25,7 @@ final currentLocaleProvider = AutoDisposeProvider<Locale>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentLocaleRef = AutoDisposeProviderRef<Locale>;
-String _$localeNotifierHash() => r'8b80797836b62320131e1fc2fd3a0771c377a930';
+String _$localeNotifierHash() => r'ca24ffb2a03b9594ac0ddf4d67491451082ccfc5';
 
 /// See also [LocaleNotifier].
 @ProviderFor(LocaleNotifier)

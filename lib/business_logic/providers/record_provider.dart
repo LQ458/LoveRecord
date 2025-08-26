@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/models/record.dart';
 import '../../data/local/database_service.dart';
-import '../../services/ai/ai_service.dart';
+import '../../core/config/app_config.dart';
 
 part 'record_provider.g.dart';
 
@@ -15,7 +15,10 @@ class RecordsNotifier extends _$RecordsNotifier {
   @override
   Future<List<Record>> build() async {
     final db = ref.read(databaseServiceProvider);
-    await db.initializeDemoData(); // 初始化演示数据
+    // Only initialize demo data in development environment
+    if (AppConfig.useDemoData) {
+      await db.initializeDemoData();
+    }
     return await db.getRecords();
   }
 
@@ -90,52 +93,4 @@ class TagsNotifier extends _$TagsNotifier {
   }
 }
 
-@riverpod
-class AIServiceNotifier extends _$AIServiceNotifier {
-  @override
-  AIService? build() {
-    // TODO: 从配置中获取AI服务
-    return null;
-  }
-
-  /// 设置AI服务
-  void setAIService(AIService service) {
-    state = service;
-  }
-
-  /// 分析内容
-  Future<ContentAnalysis> analyzeContent(String content) async {
-    final service = state;
-    if (service == null) {
-      throw Exception('AI service not configured');
-    }
-    return await service.analyzeContent(content);
-  }
-
-  /// 分析情感
-  Future<EmotionAnalysis> analyzeEmotion(String content) async {
-    final service = state;
-    if (service == null) {
-      throw Exception('AI service not configured');
-    }
-    return await service.analyzeEmotion(content);
-  }
-
-  /// 生成摘要
-  Future<String> generateSummary(String content) async {
-    final service = state;
-    if (service == null) {
-      throw Exception('AI service not configured');
-    }
-    return await service.generateSummary(content);
-  }
-
-  /// 聊天对话
-  Future<String> chat(String message, List<String> context) async {
-    final service = state;
-    if (service == null) {
-      throw Exception('AI service not configured');
-    }
-    return await service.chat(message, context);
-  }
-} 
+// AI服务相关功能已移至ai_provider.dart 

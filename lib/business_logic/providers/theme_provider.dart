@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as developer;
 import '../../presentation/themes/romantic_themes.dart';
 
 part 'theme_provider.g.dart';
@@ -19,20 +20,43 @@ class ThemeNotifier extends _$ThemeNotifier {
   
   @override
   Future<ThemeState> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // Load saved theme
-    final themeIndex = prefs.getInt(_themeKey) ?? 0;
-    final romanticTheme = RomanticTheme.values[themeIndex.clamp(0, RomanticTheme.values.length - 1)];
-    
-    // Load saved brightness mode
-    final brightnessModeIndex = prefs.getInt(_brightnessKey) ?? 2; // Default to system
-    final brightnessMode = ThemeBrightnessMode.values[brightnessModeIndex.clamp(0, ThemeBrightnessMode.values.length - 1)];
-    
-    return ThemeState(
-      romanticTheme: romanticTheme,
-      brightnessMode: brightnessMode,
-    );
+    try {
+      developer.log('🎨 开始加载主题设置...', name: 'ThemeNotifier');
+      
+      final prefs = await SharedPreferences.getInstance();
+      developer.log('✅ SharedPreferences获取成功', name: 'ThemeNotifier');
+      
+      // Load saved theme
+      final themeIndex = prefs.getInt(_themeKey) ?? 0;
+      final romanticTheme = RomanticTheme.values[themeIndex.clamp(0, RomanticTheme.values.length - 1)];
+      developer.log('🎨 加载的主题: $romanticTheme (index: $themeIndex)', name: 'ThemeNotifier');
+      
+      // Load saved brightness mode
+      final brightnessModeIndex = prefs.getInt(_brightnessKey) ?? 2; // Default to system
+      final brightnessMode = ThemeBrightnessMode.values[brightnessModeIndex.clamp(0, ThemeBrightnessMode.values.length - 1)];
+      developer.log('🌙 加载的亮度模式: $brightnessMode (index: $brightnessModeIndex)', name: 'ThemeNotifier');
+      
+      final themeState = ThemeState(
+        romanticTheme: romanticTheme,
+        brightnessMode: brightnessMode,
+      );
+      
+      developer.log('✅ 主题设置加载完成', name: 'ThemeNotifier');
+      return themeState;
+    } catch (e, stackTrace) {
+      developer.log(
+        '❌ 主题设置加载失败: $e',
+        name: 'ThemeNotifier',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      
+      // 返回默认主题设置
+      return const ThemeState(
+        romanticTheme: RomanticTheme.sweetheartBliss,
+        brightnessMode: ThemeBrightnessMode.system,
+      );
+    }
   }
   
   /// Change the romantic theme

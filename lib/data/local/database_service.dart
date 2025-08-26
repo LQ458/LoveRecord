@@ -7,17 +7,38 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/record.dart';
 import '../models/media_file.dart';
 import 'demo_data.dart';
+import '../../core/config/app_config.dart';
 
 class DatabaseService {
   static Database? _database;
-  static const String _databaseName = 'loverecord.db';
+  static String get _databaseName => AppConfig.databaseName;
   static const int _databaseVersion = 1;
 
   /// 获取数据库实例
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+    await _performIntegrityCheck();
     return _database!;
+  }
+
+  /// 执行数据库完整性检查
+  Future<void> _performIntegrityCheck() async {
+    if (_database == null) return;
+    
+    try {
+      final result = await _database!.rawQuery('PRAGMA integrity_check');
+      if (result.isNotEmpty && result.first.values.first != 'ok') {
+        if (AppConfig.enableDebugLogging) {
+          print('Database integrity check failed: ${result.first.values.first}');
+        }
+        // Could implement recovery logic here
+      }
+    } catch (e) {
+      if (AppConfig.enableDebugLogging) {
+        print('Database integrity check error: $e');
+      }
+    }
   }
 
   /// 初始化数据库
@@ -188,12 +209,23 @@ class DatabaseService {
     });
   }
 
-  /// 初始化演示数据
+  /// 初始化演示数据 (仅在开发环境)
   Future<void> initializeDemoData() async {
+    // Only initialize demo data in development environment
+    if (!AppConfig.useDemoData) {
+      if (AppConfig.enableDebugLogging) {
+        print('Demo data initialization skipped - not in development environment');
+      }
+      return;
+    }
+    
     final db = await database;
     final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM records'));
     
     if (count == 0) {
+      if (AppConfig.enableDebugLogging) {
+        print('Initializing demo data for development environment');
+      }
       final demoRecords = DemoData.getDemoRecords();
       for (final record in demoRecords) {
         await saveRecord(record);
