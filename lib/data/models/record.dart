@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:uuid/uuid.dart';
 import 'media_file.dart';
+import 'ai_analysis_result.dart';
 
 part 'record.g.dart';
 
@@ -32,6 +33,10 @@ class Record {
   final DateTime updatedAt;
   final RecordType type;
   final Map<String, dynamic> metadata;
+  
+  // AI分析结果（从数据库懒加载）
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final AIAnalysisResult? aiAnalysis;
 
   const Record({
     required this.id,
@@ -43,6 +48,7 @@ class Record {
     required this.updatedAt,
     required this.type,
     required this.metadata,
+    this.aiAnalysis,
   });
 
   factory Record.create({
@@ -64,6 +70,7 @@ class Record {
       updatedAt: now,
       type: type,
       metadata: metadata,
+      aiAnalysis: null, // AI分析将稍后添加
     );
   }
 
@@ -77,6 +84,7 @@ class Record {
     DateTime? updatedAt,
     RecordType? type,
     Map<String, dynamic>? metadata,
+    AIAnalysisResult? aiAnalysis,
   }) {
     return Record(
       id: id ?? this.id,
@@ -88,6 +96,7 @@ class Record {
       updatedAt: updatedAt ?? this.updatedAt,
       type: type ?? this.type,
       metadata: metadata ?? this.metadata,
+      aiAnalysis: aiAnalysis ?? this.aiAnalysis,
     );
   }
 

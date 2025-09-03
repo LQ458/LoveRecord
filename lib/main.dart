@@ -10,12 +10,16 @@ import 'business_logic/providers/locale_provider.dart';
 import 'presentation/themes/romantic_themes.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/main_navigation_screen.dart';
 import 'presentation/screens/onboarding_screen.dart';
 import 'presentation/screens/settings_screen.dart';
 import 'presentation/screens/create_record_screen.dart';
 import 'presentation/screens/record_detail_screen.dart';
 import 'presentation/screens/analytics_screen.dart';
 import 'presentation/screens/test_screen.dart';
+import 'presentation/screens/storage_info_screen.dart';
+import 'presentation/screens/todo_list_screen.dart';
+import 'services/system/system_integration_manager.dart';
 
 void main() async {
   // 设置全局错误处理
@@ -46,6 +50,10 @@ void main() async {
     developer.log('⚙️ 开始初始化设置服务...', name: 'Main');
     await SettingsService.initialize();
     developer.log('✅ 设置服务初始化完成', name: 'Main');
+    
+    developer.log('🍎 开始初始化Apple风格系统集成...', name: 'Main');
+    await SystemIntegrationManager.initialize();
+    developer.log('✅ 系统集成初始化完成', name: 'Main');
     
     // 直接设置配置（临时解决方案）
     const apiKey = 'sk-9a0a426475814fc48ef9ae955be93530';
@@ -201,12 +209,14 @@ class LoveRecordApp extends ConsumerWidget {
                       locale: locale,
                       home: initialScreen,
                       routes: {
-                        '/home': (context) => const HomeScreen(),
+                        '/home': (context) => const MainNavigationScreen(),
                         '/onboarding': (context) => const OnboardingScreen(),
                         '/settings': (context) => const SettingsScreen(),
                         '/create-record': (context) => const CreateRecordScreen(),
                         '/analytics': (context) => const AnalyticsScreen(),
                         '/test': (context) => const TestScreen(),
+                        '/storage-info': (context) => const StorageInfoScreen(),
+                        '/todos': (context) => const TodoListScreen(),
                       },
                       onGenerateRoute: (settings) {
                         try {
@@ -378,8 +388,8 @@ class LoveRecordApp extends ConsumerWidget {
         developer.log('🏠 返回引导屏幕', name: 'LoveRecordApp');
         return const OnboardingScreen();
       }
-      developer.log('🏠 返回主屏幕', name: 'LoveRecordApp');
-      return const HomeScreen();
+      developer.log('🏠 返回主导航屏幕', name: 'LoveRecordApp');
+      return const MainNavigationScreen();
     } catch (e, stackTrace) {
       developer.log(
         '❌ 获取初始屏幕错误: $e',

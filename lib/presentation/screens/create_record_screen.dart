@@ -9,6 +9,8 @@ import '../../business_logic/providers/theme_provider.dart';
 import '../../services/ai/ai_service_factory.dart';
 import '../../services/ai/ai_service.dart';
 import '../../data/local/settings_service.dart';
+import '../../data/local/database_service.dart';
+import '../../data/models/ai_analysis_result.dart';
 import '../../l10n/app_localizations.dart';
 
 class CreateRecordScreen extends ConsumerStatefulWidget {
@@ -28,6 +30,11 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
   final List<String> _tags = [];
   bool _isLoading = false;
   bool _isAnalyzing = false;
+  
+  // 存储AI分析结果
+  ContentAnalysis? _lastAnalysis;
+  EmotionAnalysis? _lastEmotionAnalysis;
+  String? _lastSummary;
 
   @override
   void dispose() {
@@ -693,6 +700,20 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
         });
       }
 
+      // 存储分析结果供后续保存使用
+      _lastAnalysis = analysis;
+      
+      // 进行情感分析和摘要生成
+      try {
+        final emotionResult = await aiService.analyzeEmotion(_contentController.text);
+        _lastEmotionAnalysis = emotionResult;
+        
+        final summaryResult = await aiService.generateSummary(_contentController.text);
+        _lastSummary = summaryResult;
+      } catch (e) {
+        print('Debug - Additional AI analysis error: $e');
+      }
+      
       // 显示分析结果
       _showAnalysisResult(analysis);
     } catch (e) {
@@ -766,6 +787,25 @@ class _CreateRecordScreenState extends ConsumerState<CreateRecordScreen> {
       );
 
       await ref.read(recordsNotifierProvider.notifier).addRecord(record);
+      
+      // 保存AI分析结果（如果有的话）
+      if (_lastAnalysis != null || _lastEmotionAnalysis != null || _lastSummary != null) {
+        try {
+          final databaseService = DatabaseService();
+          await databaseService.saveAIAnalysisResults(
+            recordId: record.id,
+            summary: _lastSummary,
+            keywords: _lastAnalysis?.keywords,
+            categories: _lastAnalysis?.categories,
+            emotion: _lastEmotionAnalysis?.emotion,
+            emotionConfidence: _lastEmotionAnalysis?.confidence,
+            contentConfidence: _lastAnalysis?.confidence,
+          );
+          print('Debug - AI analysis saved successfully for record: ${record.id}');
+        } catch (e) {
+          print('Debug - Failed to save AI analysis: $e');
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

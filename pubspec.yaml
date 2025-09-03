@@ -80,6 +80,21 @@ dependencies:
   # AI Services
   http: ^1.1.2
   json_annotation: ^4.8.1
+  
+  # System Integration (Apple-style)
+  flutter_local_notifications: ^17.0.0
+  permission_handler: ^11.3.0
+  geolocator: ^10.1.0
+  battery_plus: ^4.0.2
+  app_usage: ^2.0.1
+  device_info_plus: ^9.1.2
+  package_info_plus: ^4.2.0
+  
+  # Widget & Platform Integration
+  home_widget: ^0.4.1
+  quick_actions: ^1.0.7
+  share_plus: ^7.2.2
+  url_launcher: ^6.2.4
 
   # Charts & Analytics
   fl_chart: ^0.66.2
@@ -97,6 +112,11 @@ dev_dependencies:
   hive_generator: ^2.0.1
   riverpod_generator: ^2.3.11
   json_serializable: ^6.7.1
+  
+  # Testing & Development
+  integration_test:
+    sdk: flutter
+  mockito: ^5.4.4
 
   # Linting
   flutter_lints: ^5.0.0

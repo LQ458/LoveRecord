@@ -4,15 +4,26 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:uuid/uuid.dart';
 import '../models/record.dart';
 import '../models/media_file.dart';
+import '../models/ai_analysis_result.dart';
 import 'demo_data.dart';
+import 'storage/storage_service_factory.dart';
+import 'storage/storage_service_interface.dart';
 import '../../core/config/app_config.dart';
 
 class DatabaseService {
   static Database? _database;
+  static StorageServiceInterface? _storageService;
   static String get _databaseName => AppConfig.databaseName;
   static const int _databaseVersion = 1;
+
+  /// 获取存储服务实例
+  static StorageServiceInterface get storageService {
+    _storageService ??= StorageServiceFactory.instance;
+    return _storageService!;
+  }
 
   /// 获取数据库实例
   Future<Database> get database async {
@@ -242,6 +253,7 @@ class DatabaseService {
     String? searchQuery,
     int? limit,
     int? offset,
+    bool includeAIAnalysis = false,
   }) async {
     final db = await database;
     
@@ -289,7 +301,7 @@ class DatabaseService {
 
     final records = <Record>[];
     for (final row in results) {
-      final record = await _buildRecordFromRow(row);
+      final record = await _buildRecordFromRow(row, includeAIAnalysis: includeAIAnalysis);
       if (record != null) {
         records.add(record);
       }
@@ -313,7 +325,27 @@ class DatabaseService {
 
     if (results.isEmpty) return null;
     
-    return await _buildRecordFromRow(results.first);
+    return await _buildRecordFromRow(results.first, includeAIAnalysis: true);
+  }
+
+  /// 更新记录
+  Future<void> updateRecord(Record record) async {
+    final db = await database;
+    
+    await db.update(
+      'records',
+      {
+        'title': record.title,
+        'content': record.content,
+        'type': record.type.name,
+        'created_at': record.createdAt.millisecondsSinceEpoch,
+        'updated_at': record.updatedAt.millisecondsSinceEpoch,
+        'tags': jsonEncode(record.tags),
+        'metadata': jsonEncode(record.metadata),
+      },
+      where: 'id = ?',
+      whereArgs: [record.id],
+    );
   }
 
   /// 删除记录
@@ -330,7 +362,7 @@ class DatabaseService {
   }
 
   /// 从数据库行构建记录对象
-  Future<Record?> _buildRecordFromRow(Map<String, dynamic> row) async {
+  Future<Record?> _buildRecordFromRow(Map<String, dynamic> row, {bool includeAIAnalysis = false}) async {
     try {
       final db = await database;
       
@@ -360,6 +392,15 @@ class DatabaseService {
       // 解析标签
       final tagsString = row['tags'] as String?;
       final tags = tagsString?.split(',').where((tag) => tag.isNotEmpty).toList() ?? [];
+      
+      // 获取AI分析结果（如果需要）
+      AIAnalysisResult? aiAnalysis;
+      if (includeAIAnalysis) {
+        final analysisData = await getAIAnalysisForRecord(row['id'] as String);
+        if (analysisData.isNotEmpty) {
+          aiAnalysis = AIAnalysisResult.fromDatabaseMap(analysisData);
+        }
+      }
 
       return Record(
         id: row['id'] as String,
@@ -376,11 +417,199 @@ class DatabaseService {
         metadata: row['metadata'] != null 
             ? jsonDecode(row['metadata'] as String) 
             : <String, dynamic>{},
+        aiAnalysis: aiAnalysis,
       );
     } catch (e) {
       print('Error building record from row: $e');
       return null;
     }
+  }
+
+  // ==================== AI Analysis 相关方法 ====================
+  
+  /// 保存AI分析结果
+  Future<void> saveAIAnalysis({
+    required String recordId,
+    required String analysisType, // 'content', 'emotion', 'summary', etc.
+    required String result,
+    double? confidence,
+  }) async {
+    final db = await database;
+    final id = const Uuid().v4();
+    
+    await db.insert(
+      'ai_analysis',
+      {
+        'id': id,
+        'record_id': recordId,
+        'analysis_type': analysisType,
+        'result': result,
+        'confidence': confidence,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  
+  /// 批量保存AI分析结果
+  Future<void> saveAIAnalysisResults({
+    required String recordId,
+    String? summary,
+    List<String>? keywords,
+    List<String>? categories,
+    String? emotion,
+    double? emotionConfidence,
+    double? contentConfidence,
+  }) async {
+    final db = await database;
+    
+    await db.transaction((txn) async {
+      // 先删除该记录的旧分析结果
+      await txn.delete('ai_analysis', where: 'record_id = ?', whereArgs: [recordId]);
+      
+      final now = DateTime.now().millisecondsSinceEpoch;
+      
+      // 保存摘要
+      if (summary != null && summary.isNotEmpty) {
+        await txn.insert('ai_analysis', {
+          'id': const Uuid().v4(),
+          'record_id': recordId,
+          'analysis_type': 'summary',
+          'result': summary,
+          'confidence': contentConfidence,
+          'created_at': now,
+        });
+      }
+      
+      // 保存关键词
+      if (keywords != null && keywords.isNotEmpty) {
+        await txn.insert('ai_analysis', {
+          'id': const Uuid().v4(),
+          'record_id': recordId,
+          'analysis_type': 'keywords',
+          'result': jsonEncode(keywords),
+          'confidence': contentConfidence,
+          'created_at': now,
+        });
+      }
+      
+      // 保存分类
+      if (categories != null && categories.isNotEmpty) {
+        await txn.insert('ai_analysis', {
+          'id': const Uuid().v4(),
+          'record_id': recordId,
+          'analysis_type': 'categories',
+          'result': jsonEncode(categories),
+          'confidence': contentConfidence,
+          'created_at': now,
+        });
+      }
+      
+      // 保存情感分析
+      if (emotion != null && emotion.isNotEmpty) {
+        await txn.insert('ai_analysis', {
+          'id': const Uuid().v4(),
+          'record_id': recordId,
+          'analysis_type': 'emotion',
+          'result': emotion,
+          'confidence': emotionConfidence,
+          'created_at': now,
+        });
+      }
+    });
+  }
+  
+  /// 获取记录的AI分析结果
+  Future<Map<String, dynamic>> getAIAnalysisForRecord(String recordId) async {
+    final db = await database;
+    final results = await db.query(
+      'ai_analysis',
+      where: 'record_id = ?',
+      whereArgs: [recordId],
+      orderBy: 'created_at DESC',
+    );
+    
+    final analysis = <String, dynamic>{};
+    
+    for (final row in results) {
+      final type = row['analysis_type'] as String;
+      final result = row['result'] as String;
+      final confidence = row['confidence'] as double?;
+      
+      switch (type) {
+        case 'summary':
+          analysis['summary'] = result;
+          analysis['summaryConfidence'] = confidence;
+          break;
+        case 'keywords':
+          try {
+            analysis['keywords'] = jsonDecode(result) as List<String>;
+          } catch (e) {
+            analysis['keywords'] = <String>[];
+          }
+          break;
+        case 'categories':
+          try {
+            analysis['categories'] = jsonDecode(result) as List<String>;
+          } catch (e) {
+            analysis['categories'] = <String>[];
+          }
+          break;
+        case 'emotion':
+          analysis['emotion'] = result;
+          analysis['emotionConfidence'] = confidence;
+          break;
+      }
+    }
+    
+    return analysis;
+  }
+  
+  /// 获取所有缺少AI分析的记录
+  Future<List<Record>> getRecordsWithoutAIAnalysis() async {
+    final db = await database;
+    
+    final results = await db.rawQuery('''
+      SELECT r.* FROM records r
+      LEFT JOIN ai_analysis a ON r.id = a.record_id
+      WHERE a.record_id IS NULL
+      ORDER BY r.created_at DESC
+    ''');
+    
+    final records = <Record>[];
+    for (final row in results) {
+      final record = await _buildRecordFromRow(row);
+      if (record != null) {
+        records.add(record);
+      }
+    }
+    
+    return records;
+  }
+  
+  /// 删除记录的AI分析结果
+  Future<void> deleteAIAnalysis(String recordId) async {
+    final db = await database;
+    await db.delete('ai_analysis', where: 'record_id = ?', whereArgs: [recordId]);
+  }
+  
+  /// 获取AI分析统计信息
+  Future<Map<String, int>> getAIAnalysisStats() async {
+    final db = await database;
+    
+    final totalRecords = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM records')
+    ) ?? 0;
+    
+    final analyzedRecords = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(DISTINCT record_id) FROM ai_analysis')
+    ) ?? 0;
+    
+    return {
+      'totalRecords': totalRecords,
+      'analyzedRecords': analyzedRecords,
+      'unanalyzedRecords': totalRecords - analyzedRecords,
+    };
   }
 
   /// 关闭数据库
